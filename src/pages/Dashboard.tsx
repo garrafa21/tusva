@@ -45,7 +45,7 @@ export default function Dashboard() {
     },
   });
 
-  const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", outro: "Evento" };
+  const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", caboclos: "🪶 Caboclos", pretos_velhos: "🕯️ Pretos Velhos", eres: "🍭 Erês", baianos: "🌴 Baianos", marinheiros: "⚓ Marinheiros", boiadeiros: "🐂 Boiadeiros", ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda", outro: "Evento" };
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
