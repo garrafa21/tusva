@@ -92,15 +92,29 @@ export default function Calendario() {
         throw new Error("Selecione a linha espiritual para a gira");
       }
 
+      const titulo = (form.get("titulo") as string) || "Novo evento";
+      const descricao = (form.get("descricao") as string) || null;
+
       const { error } = await supabase.from("eventos").insert({
-        titulo: form.get("titulo") as string,
-        descricao: (form.get("descricao") as string) || null,
+        titulo,
+        descricao,
         tipo: selectedTipo as any,
         linha: selectedLinha || null,
         data_inicio: dataInicio,
         criado_por: user?.id,
       });
       if (error) throw error;
+
+      if (selectedTipo === "gira" || selectedTipo === "desenvolvimento") {
+        const linhaNotif = (linhaLabel[selectedLinha] ?? selectedLinha ?? "Linha espiritual")
+          .replace(/^[^\p{L}\p{N}]+/u, "")
+          .toUpperCase();
+        void sendPushNotification({
+          title: `GIRA DE ${linhaNotif}`,
+          body: "CONFIRME SUA PRESENÇA!",
+          url: "/calendario",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["eventos"] });
