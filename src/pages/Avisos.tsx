@@ -53,20 +53,16 @@ export default function Avisos() {
     },
   });
 
-  // Get upcoming giras for today/tomorrow to show personal assignments
+  // Show assignments until the gira day passes (remove only on next day)
   const { data: proximasGiras } = useQuery({
     queryKey: ["proximas-giras-avisos"],
     queryFn: async () => {
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 2);
       const { data } = await supabase
         .from("eventos")
         .select("*")
         .in("tipo", ["gira", "desenvolvimento"])
-        .gte("data_inicio", now.toISOString())
-        .lte("data_inicio", tomorrow.toISOString())
-        .order("data_inicio");
+        .gte("data_inicio", startOfLocalDayIso())
+        .order("data_inicio", { ascending: true });
       return data ?? [];
     },
   });
