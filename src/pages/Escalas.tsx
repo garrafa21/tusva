@@ -451,7 +451,7 @@ export default function Escalas() {
                               <CheckCircle2 className="w-3 h-3" /> Você
                             </span>
                           )}
-                          {isAdmin && (
+                          {canManageEscalas && (
                             <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive"
                               onClick={() => { if (confirm("Excluir?")) deleteEscala.mutate(e.id); }}>
                               <Trash2 className="w-4 h-4" />
