@@ -132,23 +132,32 @@ export type Database = {
       entidades: {
         Row: {
           categoria: string
+          como_trabalha: string | null
           created_at: string
           descricao: string | null
+          elementos: string | null
           id: string
+          medium_user_id: string | null
           nome: string
         }
         Insert: {
           categoria: string
+          como_trabalha?: string | null
           created_at?: string
           descricao?: string | null
+          elementos?: string | null
           id?: string
+          medium_user_id?: string | null
           nome: string
         }
         Update: {
           categoria?: string
+          como_trabalha?: string | null
           created_at?: string
           descricao?: string | null
+          elementos?: string | null
           id?: string
+          medium_user_id?: string | null
           nome?: string
         }
         Relationships: []
