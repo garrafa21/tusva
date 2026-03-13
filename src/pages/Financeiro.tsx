@@ -59,6 +59,15 @@ export default function Financeiro() {
     enabled: isAdmin,
   });
 
+  const { data: serverNow } = useQuery({
+    queryKey: ["server-now"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_server_now" as any);
+      if (error) throw error;
+      return data as string;
+    },
+  });
+
   const gerarMensalidade = useMutation({
     mutationFn: async (mesRef: string) => {
       const dia = parseInt(diaPreferido);
