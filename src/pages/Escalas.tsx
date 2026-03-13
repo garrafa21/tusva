@@ -578,7 +578,7 @@ export default function Escalas() {
 
         {/* ========== DEMAIS FUNÇÕES ========== */}
         <TabsContent value="funcoes">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openFuncoes} onOpenChange={setOpenFuncoes}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Escalar Funções</Button>
