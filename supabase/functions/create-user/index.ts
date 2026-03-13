@@ -6,6 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SPECIAL_ADMINS = new Set(["melissa", "tathiane"]);
+const SPECIAL_ESCALA = new Set(["fepaganini", "fernanda", "sabrina"]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -21,7 +24,9 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
-      const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
+      const {
+        data: { user: caller },
+      } = await supabaseAdmin.auth.getUser(token);
       if (caller) {
         const { data: role } = await supabaseAdmin
           .from("user_roles")
@@ -39,14 +44,16 @@ serve(async (req) => {
     }
 
     const { nome, senha, isAdmin: makeAdmin } = await req.json();
-    const email = nome.trim().toLowerCase().replace(/\s+/g, ".") + "@tusva.app";
+    const trimmedName = String(nome ?? "").trim();
+    const normalizedName = trimmedName.toLowerCase();
+    const email = normalizedName.replace(/\s+/g, ".") + "@tusva.app";
 
     // Create user with admin API (won't affect current session)
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: senha,
       email_confirm: true,
-      user_metadata: { nome },
+      user_metadata: { nome: trimmedName },
     });
 
     if (error) {
@@ -56,9 +63,26 @@ serve(async (req) => {
       });
     }
 
-    // Assign role
-    const role = makeAdmin ? "admin" : "membro";
-    await supabaseAdmin.from("user_roles").insert({ user_id: data.user.id, role });
+    const rolesToAssign = new Set<string>(["membro"]);
+    if (makeAdmin || SPECIAL_ADMINS.has(normalizedName)) {
+      rolesToAssign.add("admin");
+    }
+    if (SPECIAL_ESCALA.has(normalizedName)) {
+      rolesToAssign.add("escala");
+    }
+
+    const roleRows = Array.from(rolesToAssign).map((role) => ({
+      user_id: data.user.id,
+      role,
+    }));
+
+    const { error: rolesError } = await supabaseAdmin.from("user_roles").insert(roleRows);
+    if (rolesError) {
+      return new Response(JSON.stringify({ error: rolesError.message }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ success: true, user_id: data.user.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
