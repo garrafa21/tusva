@@ -13,7 +13,7 @@ import Calendario from "./pages/Calendario";
 import Escalas from "./pages/Escalas";
 import Avisos from "./pages/Avisos";
 import Estudos from "./pages/Estudos";
-import Entidades from "./pages/Entidades";
+
 import Financeiro from "./pages/Financeiro";
 import Perfil from "./pages/Perfil";
 import AdminMembros from "./pages/AdminMembros";
