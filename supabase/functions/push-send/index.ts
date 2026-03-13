@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
 const corsHeaders = {
@@ -33,24 +33,28 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Validate token explicitly (required with verify_jwt=false)
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseAdmin.auth.getUser(token);
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
-    if (userError || !user) {
-      console.error("Auth error:", userError?.message);
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error("Auth error:", claimsError?.message);
       return new Response(JSON.stringify({ error: "Não autenticado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const userId = claimsData.claims.sub as string;
+
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     const { data: roleRows, error: roleError } = await supabaseAdmin
       .from("user_roles")
