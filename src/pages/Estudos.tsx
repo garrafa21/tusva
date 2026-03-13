@@ -101,7 +101,7 @@ export default function Estudos() {
   const { data: membros } = useQuery({
     queryKey: ["membros-entidades"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual, avatar_url");
       return data ?? [];
     },
   });
