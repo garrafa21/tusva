@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,12 +10,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Plus, MapPin, Clock } from "lucide-react";
+import { Calendar, Plus, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", outro: "Outro" };
-const tipoCor: Record<string, string> = { gira: "bg-primary/20 text-primary", festa: "bg-gold/20 text-gold", reuniao: "bg-blue-500/20 text-blue-400", outro: "bg-secondary text-muted-foreground" };
+const tipoLabel: Record<string, string> = {
+  gira: "Gira", festa: "Festa", reuniao: "Reunião",
+  desenvolvimento: "Desenvolvimento", outro: "Outro"
+};
+const tipoCor: Record<string, string> = {
+  gira: "bg-primary/20 text-primary",
+  festa: "bg-accent/20 text-accent-foreground",
+  reuniao: "bg-blue-500/20 text-blue-500",
+  desenvolvimento: "bg-green-500/20 text-green-600",
+  outro: "bg-secondary text-muted-foreground"
+};
 
 export default function Calendario() {
   const { isAdmin, user } = useAuth();
@@ -34,13 +43,16 @@ export default function Calendario() {
 
   const createEvento = useMutation({
     mutationFn: async (form: FormData) => {
+      const dia = form.get("dia") as string; // MM-DD
+      const hora = form.get("hora") as string; // HH:mm
+      const year = new Date().getFullYear();
+      const dataInicio = `${year}-${dia}T${hora}:00`;
+
       const { error } = await supabase.from("eventos").insert({
         titulo: form.get("titulo") as string,
-        descricao: form.get("descricao") as string || null,
-        tipo: form.get("tipo") as "gira" | "festa" | "reuniao" | "outro",
-        data_inicio: form.get("data_inicio") as string,
-        data_fim: (form.get("data_fim") as string) || null,
-        local: (form.get("local") as string) || null,
+        descricao: (form.get("descricao") as string) || null,
+        tipo: form.get("tipo") as string,
+        data_inicio: dataInicio,
         criado_por: user?.id,
       });
       if (error) throw error;
@@ -79,9 +91,10 @@ export default function Calendario() {
                     <SelectContent>{Object.entries(tipoLabel).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>Data/Hora Início</Label><Input name="data_inicio" type="datetime-local" required className="bg-secondary" /></div>
-                <div><Label>Data/Hora Fim (opcional)</Label><Input name="data_fim" type="datetime-local" className="bg-secondary" /></div>
-                <div><Label>Local (opcional)</Label><Input name="local" className="bg-secondary" /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label>Dia (mês/dia)</Label><Input name="dia" type="text" placeholder="03-15" required className="bg-secondary" pattern="\d{2}-\d{2}" title="Formato: MM-DD (ex: 03-15)" /></div>
+                  <div><Label>Horário</Label><Input name="hora" type="time" required className="bg-secondary" defaultValue="19:00" /></div>
+                </div>
                 <div><Label>Descrição (opcional)</Label><Textarea name="descricao" className="bg-secondary" /></div>
                 <Button type="submit" className="w-full" disabled={createEvento.isPending}>
                   {createEvento.isPending ? "Criando..." : "Criar Evento"}
@@ -103,16 +116,13 @@ export default function Calendario() {
                 {futuros.map((e) => (
                   <Card key={e.id} className="bg-card border-border">
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo]}`}>{tipoLabel[e.tipo]}</span>
-                          <h3 className="font-display font-semibold mt-1">{e.titulo}</h3>
-                          {e.descricao && <p className="text-sm text-muted-foreground mt-1">{e.descricao}</p>}
-                        </div>
+                      <div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo]}`}>{tipoLabel[e.tipo] ?? e.tipo}</span>
+                        <h3 className="font-display font-semibold mt-1">{e.titulo}</h3>
+                        {e.descricao && <p className="text-sm text-muted-foreground mt-1">{e.descricao}</p>}
                       </div>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(new Date(e.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
-                        {e.local && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{e.local}</span>}
                       </div>
                     </CardContent>
                   </Card>
@@ -128,7 +138,7 @@ export default function Calendario() {
                 {passados.slice(-5).map((e) => (
                   <Card key={e.id} className="bg-card border-border">
                     <CardContent className="p-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo]}`}>{tipoLabel[e.tipo]}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo]}`}>{tipoLabel[e.tipo] ?? e.tipo}</span>
                       <h3 className="font-display font-semibold mt-1">{e.titulo}</h3>
                       <p className="text-xs text-muted-foreground mt-1">{format(new Date(e.data_inicio), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
                     </CardContent>
