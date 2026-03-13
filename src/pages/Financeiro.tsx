@@ -93,9 +93,9 @@ export default function Financeiro() {
   const mensalidadeAtual = mensalidades?.find((m) => m.mes_referencia === mesAtual && m.user_id === user?.id);
 
   const getStatusBadge = (status: string, dataVencimento: string) => {
-    if (status === "pago") return <Badge className="bg-green-500/20 text-green-600 border-0"><CheckCircle className="w-3 h-3 mr-1" /> Pago</Badge>;
+    if (status === "pago") return <Badge className="bg-primary/20 text-primary border-0"><CheckCircle className="w-3 h-3 mr-1" /> Pago</Badge>;
     if (isBefore(new Date(dataVencimento), now) && status !== "pago") return <Badge variant="destructive" className="gap-1"><AlertTriangle className="w-3 h-3" /> Atrasado</Badge>;
-    return <Badge className="bg-yellow-500/20 text-yellow-600 border-0"><Clock className="w-3 h-3 mr-1" /> Pendente</Badge>;
+    return <Badge className="bg-accent/20 text-accent-foreground border-0"><Clock className="w-3 h-3 mr-1" /> Pendente</Badge>;
   };
 
   const getProfileName = (userId: string) => profiles?.find((p) => p.user_id === userId)?.nome ?? "—";
