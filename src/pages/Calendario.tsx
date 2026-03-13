@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Plus, Clock, Trash2 } from "lucide-react";
+import { Calendar, Plus, Clock, Trash2, CheckCircle2, XCircle, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -37,6 +37,14 @@ const linhaCor: Record<string, string> = {
   esquerda: "bg-red-500/20 text-red-600",
 };
 
+function getTimezoneOffsetStr() {
+  const offset = -new Date().getTimezoneOffset();
+  const sign = offset >= 0 ? "+" : "-";
+  const h = String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0");
+  const m = String(Math.abs(offset) % 60).padStart(2, "0");
+  return `${sign}${h}:${m}`;
+}
+
 export default function Calendario() {
   const { isAdmin, user } = useAuth();
   const { toast } = useToast();
@@ -44,6 +52,7 @@ export default function Calendario() {
   const [open, setOpen] = useState(false);
   const [selectedTipo, setSelectedTipo] = useState("gira");
   const [selectedLinha, setSelectedLinha] = useState("");
+  const [showPresenca, setShowPresenca] = useState<string | null>(null);
 
   const { data: eventos, isLoading } = useQuery({
     queryKey: ["eventos"],
@@ -54,11 +63,29 @@ export default function Calendario() {
     },
   });
 
+  const { data: confirmacoes } = useQuery({
+    queryKey: ["confirmacoes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("confirmacoes_presenca").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: membros } = useQuery({
+    queryKey: ["membros-presenca"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      return data ?? [];
+    },
+  });
+
   const createEvento = useMutation({
     mutationFn: async (form: FormData) => {
-      const dataStr = form.get("data") as string; // YYYY-MM-DD from native date input
+      const dataStr = form.get("data") as string;
       const hora = form.get("hora") as string;
-      const dataInicio = `${dataStr}T${hora}:00`;
+      const tz = getTimezoneOffsetStr();
+      const dataInicio = `${dataStr}T${hora}:00${tz}`;
 
       const { error } = await supabase.from("eventos").insert({
         titulo: form.get("titulo") as string,
@@ -94,14 +121,48 @@ export default function Calendario() {
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
-  const showLinhaSelector = selectedTipo === "gira" || selectedTipo === "desenvolvimento";
+  const confirmarPresenca = useMutation({
+    mutationFn: async ({ eventoId, status }: { eventoId: string; status: string }) => {
+      const { error } = await supabase.from("confirmacoes_presenca").upsert({
+        evento_id: eventoId,
+        user_id: user!.id,
+        status,
+      }, { onConflict: "evento_id,user_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["confirmacoes"] });
+      toast({ title: "Presença atualizada!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
 
+  const showLinhaSelector = selectedTipo === "gira" || selectedTipo === "desenvolvimento";
   const now = new Date();
   const futuros = eventos?.filter((e) => new Date(e.data_inicio) >= now) ?? [];
   const passados = eventos?.filter((e) => new Date(e.data_inicio) < now) ?? [];
 
+  const getMyConfirmacao = (eventoId: string) => {
+    return confirmacoes?.find((c) => c.evento_id === eventoId && c.user_id === user?.id);
+  };
+
+  const getConfirmacoesByEvento = (eventoId: string) => {
+    return confirmacoes?.filter((c) => c.evento_id === eventoId) ?? [];
+  };
+
+  const getNome = (id: string) => {
+    const m = membros?.find((m) => m.user_id === id);
+    return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
+  };
+
   const renderEvento = (e: any, isPast = false) => {
     const linha = (e as any).linha as string | null;
+    const isGira = e.tipo === "gira" || e.tipo === "desenvolvimento";
+    const myConf = getMyConfirmacao(e.id);
+    const confs = getConfirmacoesByEvento(e.id);
+    const vaiCount = confs.filter((c) => c.status === "vai").length;
+    const naoVaiCount = confs.filter((c) => c.status === "nao_vai").length;
+
     return (
       <Card key={e.id} className="bg-card border-border">
         <CardContent className="p-4">
@@ -122,6 +183,55 @@ export default function Calendario() {
               <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(new Date(e.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
               </div>
+
+              {/* Presence confirmation for giras */}
+              {isGira && !isPast && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={myConf?.status === "vai" ? "default" : "outline"}
+                      className="gap-1 h-7 text-xs"
+                      onClick={() => confirmarPresenca.mutate({ eventoId: e.id, status: "vai" })}
+                    >
+                      <CheckCircle2 className="w-3 h-3" /> Vou
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={myConf?.status === "nao_vai" ? "destructive" : "outline"}
+                      className="gap-1 h-7 text-xs"
+                      onClick={() => confirmarPresenca.mutate({ eventoId: e.id, status: "nao_vai" })}
+                    >
+                      <XCircle className="w-3 h-3" /> Não vou
+                    </Button>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      ✓ {vaiCount} · ✗ {naoVaiCount}
+                    </span>
+                  </div>
+
+                  {/* Admin: show who confirmed */}
+                  {isAdmin && confs.length > 0 && (
+                    <button
+                      onClick={() => setShowPresenca(showPresenca === e.id ? null : e.id)}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Users className="w-3 h-3" /> Ver confirmações ({confs.length})
+                    </button>
+                  )}
+                  {showPresenca === e.id && (
+                    <div className="bg-secondary rounded-lg p-2 space-y-1">
+                      {confs.map((c) => (
+                        <div key={c.id} className="flex items-center justify-between text-xs">
+                          <span>{getNome(c.user_id)}</span>
+                          <span className={c.status === "vai" ? "text-green-600 font-medium" : "text-destructive font-medium"}>
+                            {c.status === "vai" ? "✓ Vai" : "✗ Não vai"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             {isAdmin && (
               <Button
@@ -180,7 +290,7 @@ export default function Calendario() {
                 )}
                 <div className="grid grid-cols-2 gap-2">
                   <div><Label>Data</Label><Input name="data" type="date" required className="bg-secondary" /></div>
-                  <div><Label>Horário</Label><Input name="hora" type="time" required className="bg-secondary" defaultValue="19:00" /></div>
+                  <div><Label>Horário</Label><Input name="hora" type="time" required className="bg-secondary" defaultValue="20:00" /></div>
                 </div>
                 <div><Label>Descrição (opcional)</Label><Textarea name="descricao" className="bg-secondary" /></div>
                 <Button type="submit" className="w-full" disabled={createEvento.isPending}>

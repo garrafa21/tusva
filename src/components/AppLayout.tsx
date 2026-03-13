@@ -64,8 +64,12 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <Link to="/perfil" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-secondary transition-colors">
-              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-4 h-4 text-primary" />
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-4 h-4 text-primary" />
+                )}
               </div>
               <span className="text-xs text-muted-foreground hidden sm:inline">{profile?.nome?.split(" ")[0]}</span>
             </Link>
