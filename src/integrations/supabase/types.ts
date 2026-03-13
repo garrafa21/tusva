@@ -65,6 +65,30 @@ export type Database = {
         }
         Relationships: []
       }
+      entidades: {
+        Row: {
+          categoria: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       escalas_limpeza: {
         Row: {
           created_at: string
@@ -178,6 +202,42 @@ export type Database = {
         }
         Relationships: []
       }
+      mensalidades: {
+        Row: {
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          id: string
+          mes_referencia: string
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          id?: string
+          mes_referencia: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          valor?: number
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          id?: string
+          mes_referencia?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -248,7 +308,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "membro"
       prioridade_aviso: "normal" | "importante" | "urgente"
-      tipo_evento: "gira" | "festa" | "reuniao" | "outro"
+      tipo_evento: "gira" | "festa" | "reuniao" | "outro" | "desenvolvimento"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -378,7 +438,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "membro"],
       prioridade_aviso: ["normal", "importante", "urgente"],
-      tipo_evento: ["gira", "festa", "reuniao", "outro"],
+      tipo_evento: ["gira", "festa", "reuniao", "outro", "desenvolvimento"],
     },
   },
 } as const
