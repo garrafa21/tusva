@@ -402,7 +402,7 @@ export default function Escalas() {
 
         {/* ========== FIM DE SEMANA ========== */}
         <TabsContent value="fds">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openFds} onOpenChange={setOpenFds}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Nova Escala Fim de Semana</Button>
