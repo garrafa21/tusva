@@ -123,11 +123,16 @@ export default function Estudos() {
 
   const createEntidade = useMutation({
     mutationFn: async (form: FormData) => {
-      const { error } = await supabase.from("entidades").insert({
+      const mediumUserId = form.get("medium_user_id") as string;
+      const payload = {
+        medium_user_id: mediumUserId,
         nome: form.get("nome") as string,
         categoria: form.get("categoria") as string,
+        como_trabalha: (form.get("como_trabalha") as string) || null,
+        elementos: (form.get("elementos") as string) || null,
         descricao: (form.get("descricao") as string) || null,
-      });
+      } as any;
+      const { error } = await supabase.from("entidades").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["entidades"] }); setOpenEntidade(false); toast({ title: "Entidade adicionada!" }); },
