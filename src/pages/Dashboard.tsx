@@ -151,9 +151,9 @@ export default function Dashboard() {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3 mt-4">
-        <Link to="/entidades" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Entidades</span>
+        <Link to="/estudos" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+          <BookOpen className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">Estudos</span>
         </Link>
         <Link to="/financeiro" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
           <DollarSign className="w-5 h-5 text-accent" />

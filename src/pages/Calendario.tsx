@@ -15,15 +15,37 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const tipoLabel: Record<string, string> = {
-  gira: "Gira", festa: "Festa", reuniao: "Reunião",
-  desenvolvimento: "Desenvolvimento", outro: "Outro"
+  gira: "Gira",
+  festa: "Festa",
+  reuniao: "Reunião",
+  desenvolvimento: "Desenvolvimento",
+  caboclos: "🪶 Caboclos",
+  pretos_velhos: "🕯️ Pretos Velhos",
+  eres: "🍭 Erês",
+  baianos: "🌴 Baianos",
+  marinheiros: "⚓ Marinheiros",
+  boiadeiros: "🐂 Boiadeiros",
+  ciganos: "🔮 Ciganos",
+  malandragem: "🎩 Malandragem",
+  esquerda: "🔥 Esquerda",
+  outro: "Outro",
 };
+
 const tipoCor: Record<string, string> = {
   gira: "bg-primary/20 text-primary",
   festa: "bg-accent/20 text-accent-foreground",
   reuniao: "bg-blue-500/20 text-blue-500",
   desenvolvimento: "bg-green-500/20 text-green-600",
-  outro: "bg-secondary text-muted-foreground"
+  caboclos: "bg-emerald-500/20 text-emerald-700",
+  pretos_velhos: "bg-amber-500/20 text-amber-700",
+  eres: "bg-pink-500/20 text-pink-600",
+  baianos: "bg-orange-500/20 text-orange-600",
+  marinheiros: "bg-cyan-500/20 text-cyan-700",
+  boiadeiros: "bg-yellow-500/20 text-yellow-700",
+  ciganos: "bg-purple-500/20 text-purple-600",
+  malandragem: "bg-slate-500/20 text-slate-600",
+  esquerda: "bg-red-500/20 text-red-600",
+  outro: "bg-secondary text-muted-foreground",
 };
 
 export default function Calendario() {
@@ -43,8 +65,8 @@ export default function Calendario() {
 
   const createEvento = useMutation({
     mutationFn: async (form: FormData) => {
-      const dia = form.get("dia") as string; // MM-DD
-      const hora = form.get("hora") as string; // HH:mm
+      const dia = form.get("dia") as string;
+      const hora = form.get("hora") as string;
       const year = new Date().getFullYear();
       const dataInicio = `${year}-${dia}T${hora}:00`;
 
@@ -81,14 +103,29 @@ export default function Calendario() {
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Novo</Button>
             </DialogTrigger>
-            <DialogContent className="bg-card border-border">
+            <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle className="font-display">Novo Evento</DialogTitle></DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); createEvento.mutate(new FormData(e.currentTarget)); }} className="space-y-3">
                 <div><Label>Título</Label><Input name="titulo" required className="bg-secondary" /></div>
-                <div><Label>Tipo</Label>
+                <div><Label>Tipo de Gira / Evento</Label>
                   <Select name="tipo" defaultValue="gira">
                     <SelectTrigger className="bg-secondary"><SelectValue /></SelectTrigger>
-                    <SelectContent>{Object.entries(tipoLabel).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                    <SelectContent>
+                      <SelectItem value="gira">Gira (geral)</SelectItem>
+                      <SelectItem value="caboclos">🪶 Caboclos</SelectItem>
+                      <SelectItem value="pretos_velhos">🕯️ Pretos Velhos</SelectItem>
+                      <SelectItem value="eres">🍭 Erês</SelectItem>
+                      <SelectItem value="baianos">🌴 Baianos</SelectItem>
+                      <SelectItem value="marinheiros">⚓ Marinheiros</SelectItem>
+                      <SelectItem value="boiadeiros">🐂 Boiadeiros</SelectItem>
+                      <SelectItem value="ciganos">🔮 Ciganos</SelectItem>
+                      <SelectItem value="malandragem">🎩 Malandragem</SelectItem>
+                      <SelectItem value="esquerda">🔥 Esquerda</SelectItem>
+                      <SelectItem value="desenvolvimento">Desenvolvimento</SelectItem>
+                      <SelectItem value="festa">Festa</SelectItem>
+                      <SelectItem value="reuniao">Reunião</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -117,7 +154,7 @@ export default function Calendario() {
                   <Card key={e.id} className="bg-card border-border">
                     <CardContent className="p-4">
                       <div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo]}`}>{tipoLabel[e.tipo] ?? e.tipo}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo] ?? tipoCor.outro}`}>{tipoLabel[e.tipo] ?? e.tipo}</span>
                         <h3 className="font-display font-semibold mt-1">{e.titulo}</h3>
                         {e.descricao && <p className="text-sm text-muted-foreground mt-1">{e.descricao}</p>}
                       </div>
@@ -138,7 +175,7 @@ export default function Calendario() {
                 {passados.slice(-5).map((e) => (
                   <Card key={e.id} className="bg-card border-border">
                     <CardContent className="p-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo]}`}>{tipoLabel[e.tipo] ?? e.tipo}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo] ?? tipoCor.outro}`}>{tipoLabel[e.tipo] ?? e.tipo}</span>
                       <h3 className="font-display font-semibold mt-1">{e.titulo}</h3>
                       <p className="text-xs text-muted-foreground mt-1">{format(new Date(e.data_inicio), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
                     </CardContent>
