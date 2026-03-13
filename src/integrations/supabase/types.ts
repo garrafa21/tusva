@@ -48,6 +48,7 @@ export type Database = {
         Row: {
           cambone_user_id: string
           created_at: string
+          criado_por: string | null
           evento_id: string
           id: string
           medium_user_id: string
@@ -55,6 +56,7 @@ export type Database = {
         Insert: {
           cambone_user_id: string
           created_at?: string
+          criado_por?: string | null
           evento_id: string
           id?: string
           medium_user_id: string
@@ -62,6 +64,7 @@ export type Database = {
         Update: {
           cambone_user_id?: string
           created_at?: string
+          criado_por?: string | null
           evento_id?: string
           id?: string
           medium_user_id?: string
@@ -287,6 +290,7 @@ export type Database = {
       funcoes_gira: {
         Row: {
           created_at: string
+          criado_por: string | null
           evento_id: string
           funcao: string
           id: string
@@ -294,6 +298,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          criado_por?: string | null
           evento_id: string
           funcao: string
           id?: string
@@ -301,6 +306,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          criado_por?: string | null
           evento_id?: string
           funcao?: string
           id?: string
@@ -352,6 +358,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_vapid_keys: {
+        Row: {
+          created_at: string
+          id: number
+          private_key: string
+          public_key: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          private_key: string
+          public_key: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          private_key?: string
+          public_key?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -384,6 +417,45 @@ export type Database = {
           nome_espiritual?: string | null
           telefone?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+          platform: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          platform?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          platform?: string | null
+          updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
