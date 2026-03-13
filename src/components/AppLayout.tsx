@@ -8,12 +8,12 @@ const navItems = [
   { to: "/", icon: Home, label: "Início" },
   { to: "/calendario", icon: Calendar, label: "Calendário" },
   { to: "/avisos", icon: Bell, label: "Avisos" },
+  { to: "/estudos", icon: BookOpen, label: "Estudos" },
   { to: "/financeiro", icon: DollarSign, label: "Financeiro" },
 ];
 
 const moreItems = [
   { to: "/escalas", icon: ClipboardList, label: "Escalas" },
-  { to: "/estudos", icon: BookOpen, label: "Estudos" },
 ];
 
 const adminItems = [
@@ -26,6 +26,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isDark, toggle } = useTheme();
 
   const allDesktopItems = [...navItems, ...moreItems, ...(isAdmin ? adminItems : [])];
+
+  // Mobile: show 5 items max (Início, Calendário, Avisos, Estudos, Financeiro)
+  const mobileItems = navItems;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -81,7 +84,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md">
         <div className="flex items-center justify-around px-1 py-1">
-          {navItems.map((item) => (
+          {mobileItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}

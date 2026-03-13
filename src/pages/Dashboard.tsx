@@ -7,6 +7,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
 
+const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", caboclos: "🪶 Caboclos", pretos_velhos: "🕯️ Pretos Velhos", eres: "🍭 Erês", baianos: "🌴 Baianos", marinheiros: "⚓ Marinheiros", boiadeiros: "🐂 Boiadeiros", ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda", outro: "Evento" };
+
 export default function Dashboard() {
   const { profile, isAdmin, user } = useAuth();
 
@@ -45,13 +47,11 @@ export default function Dashboard() {
     },
   });
 
-  const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", caboclos: "🪶 Caboclos", pretos_velhos: "🕯️ Pretos Velhos", eres: "🍭 Erês", baianos: "🌴 Baianos", marinheiros: "⚓ Marinheiros", boiadeiros: "🐂 Boiadeiros", ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda", outro: "Evento" };
-
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
       {/* Greeting */}
       <div className="flex items-center gap-3 mb-6">
-        <img src="/logo-tusva.jpg" alt="TUSVA" className="w-12 h-12 rounded-full object-cover shadow-md shadow-primary/20" />
+        <img src="/logo-tusva.jpg" alt="TUSVA" className="w-12 h-12 rounded-full object-cover shadow-md shadow-primary/20" loading="eager" />
         <div>
           <h1 className="font-display text-lg font-semibold">
             Axé, {profile?.nome_espiritual || profile?.nome?.split(" ")[0]}!
@@ -159,9 +159,9 @@ export default function Dashboard() {
           <DollarSign className="w-5 h-5 text-accent" />
           <span className="text-sm font-medium">Financeiro</span>
         </Link>
-        <Link to="/estudos" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-          <BookOpen className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Estudos</span>
+        <Link to="/escalas" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+          <ClipboardList className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">Escalas</span>
         </Link>
         <Link to="/calendario" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
           <Calendar className="w-5 h-5 text-accent" />
