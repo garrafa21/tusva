@@ -95,9 +95,11 @@ export type Database = {
           criado_por: string | null
           data: string
           descricao: string | null
+          funcao: string | null
           id: string
           responsaveis: string[]
           status: string
+          tipo_escala: string
           updated_at: string
         }
         Insert: {
@@ -105,9 +107,11 @@ export type Database = {
           criado_por?: string | null
           data: string
           descricao?: string | null
+          funcao?: string | null
           id?: string
           responsaveis?: string[]
           status?: string
+          tipo_escala?: string
           updated_at?: string
         }
         Update: {
@@ -115,9 +119,11 @@ export type Database = {
           criado_por?: string | null
           data?: string
           descricao?: string | null
+          funcao?: string | null
           id?: string
           responsaveis?: string[]
           status?: string
+          tipo_escala?: string
           updated_at?: string
         }
         Relationships: []
