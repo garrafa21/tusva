@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { BookOpen, Plus, ArrowLeft, Trash2, ChevronDown, Pencil } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -101,7 +102,7 @@ export default function Estudos() {
   const { data: membros } = useQuery({
     queryKey: ["membros-entidades"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual, avatar_url");
       return data ?? [];
     },
   });
@@ -661,7 +662,15 @@ export default function Estudos() {
                 return (
                   <Collapsible key={mediumId} className="border border-border rounded-lg bg-card">
                     <CollapsibleTrigger className="w-full p-3 flex items-center justify-between text-left">
-                      <span className="font-medium text-sm">{getNomeMembroById(mediumId)}</span>
+                      <span className="font-medium text-sm flex items-center gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={membros?.find((m) => m.user_id === mediumId)?.avatar_url ?? undefined} />
+                          <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                            {getNomeMembroById(mediumId).charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {getNomeMembroById(mediumId)}
+                      </span>
                       <span className="flex items-center gap-2 text-xs text-muted-foreground">
                         {items.length} entidade(s)
                         <ChevronDown className="w-4 h-4" />

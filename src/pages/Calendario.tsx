@@ -38,13 +38,8 @@ const linhaCor: Record<string, string> = {
   esquerda: "bg-red-500/20 text-red-600",
 };
 
-function getTimezoneOffsetStr() {
-  const offset = -new Date().getTimezoneOffset();
-  const sign = offset >= 0 ? "+" : "-";
-  const h = String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0");
-  const m = String(Math.abs(offset) % 60).padStart(2, "0");
-  return `${sign}${h}:${m}`;
-}
+// Brazil (São Paulo) is always UTC-3 (no DST since 2019)
+const SAO_PAULO_OFFSET = "-03:00";
 
 export default function Calendario() {
   const { isAdmin, user } = useAuth();
@@ -85,8 +80,7 @@ export default function Calendario() {
     mutationFn: async (form: FormData) => {
       const dataStr = form.get("data") as string;
       const hora = form.get("hora") as string;
-      const tz = getTimezoneOffsetStr();
-      const dataInicio = `${dataStr}T${hora}:00${tz}`;
+      const dataInicio = `${dataStr}T${hora}:00${SAO_PAULO_OFFSET}`;
 
       if ((selectedTipo === "gira" || selectedTipo === "desenvolvimento") && !selectedLinha) {
         throw new Error("Selecione a linha espiritual para a gira");

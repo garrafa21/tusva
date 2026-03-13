@@ -1,9 +1,17 @@
+const CACHE_VERSION = "tusva-v2";
+
 self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener("push", (event) => {
@@ -48,4 +56,11 @@ self.addEventListener("notificationclick", (event) => {
       return undefined;
     })
   );
+});
+
+// Listen for skip waiting message from client
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });

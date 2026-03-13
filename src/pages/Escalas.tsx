@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardList, Plus, CheckCircle2, Trash2, Sparkles, CalendarDays, Users, Shield } from "lucide-react";
 import { format } from "date-fns";
@@ -37,6 +38,8 @@ const linhaLabel: Record<string, string> = {
   ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda",
 };
 
+const BLANK_VALUE = "__blank__";
+
 export default function Escalas() {
   const { canManageEscalas, user } = useAuth();
   const { toast } = useToast();
@@ -47,23 +50,19 @@ export default function Escalas() {
   const [openCambone, setOpenCambone] = useState(false);
   const [openFuncoes, setOpenFuncoes] = useState(false);
 
-  // Gira assignments
   const [selectedGiraId, setSelectedGiraId] = useState("");
   const [giraAssignments, setGiraAssignments] = useState<Record<string, string>>({});
   const [fdsMembers, setFdsMembers] = useState<string[]>([]);
 
-  // Cambone assignments
   const [camboneGiraId, setCamboneGiraId] = useState("");
   const [camboneAssignments, setCamboneAssignments] = useState<Record<string, string>>({});
   const [selectedMediums, setSelectedMediums] = useState<string[]>([]);
 
-  // Demais funções
   const [funcoesGiraId, setFuncoesGiraId] = useState("");
   const [funcoesAssignments, setFuncoesAssignments] = useState<Record<string, string>>({});
 
   const hoje = new Date().toISOString().split("T")[0];
 
-  // Queries
   const { data: giras } = useQuery({
     queryKey: ["giras-futuras"],
     queryFn: async () => {
@@ -81,7 +80,11 @@ export default function Escalas() {
   const { data: escalas, isLoading } = useQuery({
     queryKey: ["escalas"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("escalas_limpeza").select("*").order("data", { ascending: true });
+      const { data, error } = await supabase
+        .from("escalas_limpeza")
+        .select("*")
+        .gte("data", hoje)
+        .order("data", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -90,7 +93,7 @@ export default function Escalas() {
   const { data: membros } = useQuery({
     queryKey: ["membros"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      const { data, error } = await supabase.from("profiles").select("user_id, nome, nome_espiritual, avatar_url");
       if (error) throw error;
       return data;
     },
@@ -114,13 +117,49 @@ export default function Escalas() {
     },
   });
 
+  // Compute used user IDs for gira limpeza (prevent duplicates)
+  const usedGiraUserIds = useMemo(() => {
+    const vals = Object.values(giraAssignments).filter((v) => v && v !== BLANK_VALUE);
+    return new Set(vals);
+  }, [giraAssignments]);
+
+  // Compute used user IDs for funções (prevent duplicates)
+  const usedFuncoesUserIds = useMemo(() => {
+    const vals = Object.values(funcoesAssignments).filter((v) => v && v !== BLANK_VALUE);
+    return new Set(vals);
+  }, [funcoesAssignments]);
+
+  const handleGiraAssignment = (funcao: string, value: string) => {
+    setGiraAssignments((prev) => {
+      const next = { ...prev };
+      if (value === BLANK_VALUE) {
+        delete next[funcao];
+      } else {
+        next[funcao] = value;
+      }
+      return next;
+    });
+  };
+
+  const handleFuncoesAssignment = (funcao: string, value: string) => {
+    setFuncoesAssignments((prev) => {
+      const next = { ...prev };
+      if (value === BLANK_VALUE) {
+        delete next[funcao];
+      } else {
+        next[funcao] = value;
+      }
+      return next;
+    });
+  };
+
   // Mutations
   const createEscalaGira = useMutation({
     mutationFn: async () => {
       if (!selectedGiraId) throw new Error("Selecione uma gira");
       const gira = giras?.find((g) => g.id === selectedGiraId);
       if (!gira) throw new Error("Gira não encontrada");
-      const entries = Object.entries(giraAssignments).filter(([, v]) => v);
+      const entries = Object.entries(giraAssignments).filter(([, v]) => v && v !== BLANK_VALUE);
       if (entries.length === 0) throw new Error("Selecione pelo menos um responsável");
 
       const dataStr = gira.data_inicio.split("T")[0];
@@ -177,6 +216,7 @@ export default function Escalas() {
         evento_id: camboneGiraId,
         medium_user_id: mediumId,
         cambone_user_id: camboneId,
+        criado_por: user?.id,
       }));
       const { error } = await supabase.from("cambones").insert(inserts);
       if (error) throw error;
@@ -195,12 +235,13 @@ export default function Escalas() {
   const createFuncoesGira = useMutation({
     mutationFn: async () => {
       if (!funcoesGiraId) throw new Error("Selecione uma gira");
-      const entries = Object.entries(funcoesAssignments).filter(([, v]) => v);
+      const entries = Object.entries(funcoesAssignments).filter(([, v]) => v && v !== BLANK_VALUE);
       if (entries.length === 0) throw new Error("Atribua pelo menos uma função");
       const inserts = entries.map(([funcao, userId]) => ({
         evento_id: funcoesGiraId,
         funcao,
         user_id: userId,
+        criado_por: user?.id,
       }));
       const { error } = await supabase.from("funcoes_gira").insert(inserts);
       if (error) throw error;
@@ -244,6 +285,21 @@ export default function Escalas() {
     return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
   };
 
+  const getAvatar = (id: string) => {
+    const m = membros?.find((m) => m.user_id === id);
+    return m?.avatar_url || null;
+  };
+
+  const getInitials = (id: string) => {
+    const name = getNome(id);
+    return name.charAt(0).toUpperCase();
+  };
+
+  const getCriadorNome = (criadorId: string | null) => {
+    if (!criadorId) return null;
+    return getNome(criadorId);
+  };
+
   const getGiraLabel = (gira: any) => {
     const linha = gira.linha ? ` — ${linhaLabel[gira.linha] || gira.linha}` : "";
     return `${gira.titulo}${linha} (${format(new Date(gira.data_inicio), "dd/MM", { locale: ptBR })})`;
@@ -252,22 +308,25 @@ export default function Escalas() {
   const escalasGira = escalas?.filter((e) => (e as any).tipo_escala === "gira") ?? [];
   const escalasFds = escalas?.filter((e) => (e as any).tipo_escala === "fim_de_semana" || !(e as any).tipo_escala) ?? [];
 
-  // Group gira escalas by date
+  // Group gira escalas by date (already filtered to future only by query)
   const giraByDate = escalasGira.reduce<Record<string, typeof escalasGira>>((acc, e) => {
     if (!acc[e.data]) acc[e.data] = [];
     acc[e.data].push(e);
     return acc;
   }, {});
 
-  // Group cambones by evento
+  // Group cambones by evento - only show future giras
+  const futureGiraIds = new Set(giras?.map((g) => g.id) ?? []);
+
   const cambonesByEvento = (cambones ?? []).reduce<Record<string, typeof cambones>>((acc, c) => {
+    if (!futureGiraIds.has(c.evento_id)) return acc;
     if (!acc[c.evento_id]) acc[c.evento_id] = [];
     acc[c.evento_id].push(c);
     return acc;
   }, {});
 
-  // Group funcoes by evento
   const funcoesByEvento = (funcoesGiraData ?? []).reduce<Record<string, typeof funcoesGiraData>>((acc, f) => {
+    if (!futureGiraIds.has(f.evento_id)) return acc;
     if (!acc[f.evento_id]) acc[f.evento_id] = [];
     acc[f.evento_id].push(f);
     return acc;
@@ -288,6 +347,13 @@ export default function Escalas() {
       return [...prev, userId];
     });
   };
+
+  const MemberAvatar = ({ userId, size = "sm" }: { userId: string; size?: "sm" | "xs" }) => (
+    <Avatar className={size === "sm" ? "h-6 w-6" : "h-5 w-5"}>
+      <AvatarImage src={getAvatar(userId) ?? undefined} />
+      <AvatarFallback className="text-[10px] bg-primary/20 text-primary">{getInitials(userId)}</AvatarFallback>
+    </Avatar>
+  );
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
@@ -317,7 +383,7 @@ export default function Escalas() {
                 <div className="space-y-3">
                   <div>
                     <Label>Selecione a Gira</Label>
-                    <Select value={selectedGiraId} onValueChange={setSelectedGiraId}>
+                    <Select value={selectedGiraId} onValueChange={(v) => { setSelectedGiraId(v); setGiraAssignments({}); }}>
                       <SelectTrigger className="bg-secondary"><SelectValue placeholder="Escolha uma gira..." /></SelectTrigger>
                       <SelectContent>
                         {giras && giras.length > 0 ? giras.map((g) => (
@@ -329,19 +395,27 @@ export default function Escalas() {
                   {selectedGiraId && (
                     <>
                       <Label>Atribuir funções</Label>
-                      {funcoesGira.map((f) => (
-                        <div key={f.value} className="flex items-center gap-2">
-                          <span className="text-sm w-28 shrink-0">{f.label}</span>
-                          <Select value={giraAssignments[f.value] || ""} onValueChange={(v) => setGiraAssignments((prev) => ({ ...prev, [f.value]: v }))}>
-                            <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                            <SelectContent>
-                              {membros?.map((m) => (
-                                <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ))}
+                      {funcoesGira.map((f) => {
+                        const currentValue = giraAssignments[f.value] || "";
+                        const availableMembers = membros?.filter(
+                          (m) => m.user_id === currentValue || !usedGiraUserIds.has(m.user_id)
+                        ) ?? [];
+
+                        return (
+                          <div key={f.value} className="flex items-center gap-2">
+                            <span className="text-sm w-28 shrink-0">{f.label}</span>
+                            <Select value={currentValue || BLANK_VALUE} onValueChange={(v) => handleGiraAssignment(f.value, v)}>
+                              <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value={BLANK_VALUE}>— Nenhum —</SelectItem>
+                                {availableMembers.map((m) => (
+                                  <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      })}
                       <Button className="w-full" onClick={() => createEscalaGira.mutate()} disabled={createEscalaGira.isPending}>
                         {createEscalaGira.isPending ? "Criando..." : "Criar Escala"}
                       </Button>
@@ -357,10 +431,10 @@ export default function Escalas() {
           ) : (
             <div className="space-y-4">
               {Object.entries(giraByDate).map(([data, items]) => {
-                const isPast = data < hoje;
                 const isMyEscala = items.some((e) => e.responsaveis.includes(user?.id ?? ""));
+                const criador = items[0]?.criado_por;
                 return (
-                  <Card key={data} className={`bg-card border-border ${isPast ? "opacity-50" : ""} ${isMyEscala && !isPast ? "border-primary/40" : ""}`}>
+                  <Card key={data} className={`bg-card border-border ${isMyEscala ? "border-primary/40" : ""}`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div>
@@ -368,6 +442,9 @@ export default function Escalas() {
                             {format(new Date(data + "T00:00:00"), "dd 'de' MMMM, EEEE", { locale: ptBR })}
                           </p>
                           {items[0]?.descricao && <p className="text-xs text-muted-foreground">{items[0].descricao}</p>}
+                          {criador && (
+                            <p className="text-xs text-muted-foreground mt-0.5">Escala feita por: <span className="text-foreground font-medium">{getCriadorNome(criador)}</span></p>
+                          )}
                         </div>
                         {canManageEscalas && (
                           <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
@@ -376,15 +453,20 @@ export default function Escalas() {
                           </Button>
                         )}
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         {items.map((e) => {
                           const funcaoLabel = funcoesGira.find((f) => f.value === (e as any).funcao)?.label || (e as any).funcao;
                           const isMe = e.responsaveis.includes(user?.id ?? "");
                           return (
                             <div key={e.id} className={`flex items-center justify-between text-sm ${isMe ? "text-primary font-medium" : "text-muted-foreground"}`}>
                               <span>{funcaoLabel}</span>
-                              <span className="flex items-center gap-1">
-                                {e.responsaveis.map(getNome).join(", ")}
+                              <span className="flex items-center gap-1.5">
+                                {e.responsaveis.map((uid) => (
+                                  <span key={uid} className="flex items-center gap-1">
+                                    <MemberAvatar userId={uid} size="xs" />
+                                    {getNome(uid)}
+                                  </span>
+                                ))}
                                 {isMe && <CheckCircle2 className="w-3 h-3 text-primary" />}
                               </span>
                             </div>
@@ -417,6 +499,7 @@ export default function Escalas() {
                       {membros?.map((m) => (
                         <label key={m.user_id} className="flex items-center gap-2 text-sm cursor-pointer">
                           <input type="checkbox" checked={fdsMembers.includes(m.user_id)} onChange={() => toggleFdsMember(m.user_id)} className="rounded border-border" />
+                          <MemberAvatar userId={m.user_id} size="xs" />
                           {m.nome_espiritual || m.nome}
                         </label>
                       ))}
@@ -435,18 +518,34 @@ export default function Escalas() {
           ) : (
             <div className="space-y-3">
               {escalasFds.map((e) => {
-                const isPast = e.data < hoje;
                 const isMe = e.responsaveis.includes(user?.id ?? "");
+                const criador = e.criado_por;
                 return (
-                  <Card key={e.id} className={`bg-card border-border ${isPast ? "opacity-50" : ""} ${isMe && !isPast ? "border-primary/40" : ""}`}>
+                  <Card key={e.id} className={`bg-card border-border ${isMe ? "border-primary/40" : ""}`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="font-display font-semibold text-sm">{format(new Date(e.data + "T00:00:00"), "dd 'de' MMMM, EEEE", { locale: ptBR })}</p>
-                          <p className="text-xs text-muted-foreground mt-1">Responsáveis: <span className="text-foreground">{e.responsaveis.map(getNome).join(", ")}</span></p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Responsáveis:{" "}
+                            <span className="text-foreground">
+                              {e.responsaveis.map((uid) => getNome(uid)).join(", ")}
+                            </span>
+                          </p>
+                          {criador && (
+                            <p className="text-xs text-muted-foreground mt-0.5">Escala feita por: <span className="text-foreground font-medium">{getCriadorNome(criador)}</span></p>
+                          )}
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {e.responsaveis.map((uid) => (
+                              <span key={uid} className="flex items-center gap-1 text-xs bg-secondary rounded-full px-2 py-0.5">
+                                <MemberAvatar userId={uid} size="xs" />
+                                {getNome(uid)}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
-                          {isMe && !isPast && (
+                          {isMe && (
                             <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3" /> Você
                             </span>
@@ -498,6 +597,7 @@ export default function Escalas() {
                           {membros?.map((m) => (
                             <label key={m.user_id} className="flex items-center gap-2 text-sm cursor-pointer">
                               <input type="checkbox" checked={selectedMediums.includes(m.user_id)} onChange={() => toggleMedium(m.user_id)} className="rounded border-border" />
+                              <MemberAvatar userId={m.user_id} size="xs" />
                               {m.nome_espiritual || m.nome}
                             </label>
                           ))}
@@ -509,7 +609,8 @@ export default function Escalas() {
                           <Label>Atribuir cambone para cada médium</Label>
                           {selectedMediums.map((mediumId) => (
                             <div key={mediumId} className="flex items-center gap-2 bg-secondary/50 rounded-lg p-2">
-                              <span className="text-sm font-medium w-28 shrink-0 truncate">{getNome(mediumId)}</span>
+                              <MemberAvatar userId={mediumId} size="xs" />
+                              <span className="text-sm font-medium w-24 shrink-0 truncate">{getNome(mediumId)}</span>
                               <span className="text-muted-foreground">→</span>
                               <Select value={camboneAssignments[mediumId] || ""} onValueChange={(v) => setCamboneAssignments((prev) => ({ ...prev, [mediumId]: v }))}>
                                 <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder="Cambone..." /></SelectTrigger>
@@ -534,12 +635,12 @@ export default function Escalas() {
             </Dialog>
           )}
 
-          {/* List cambones by gira */}
           <div className="space-y-4">
             {Object.entries(cambonesByEvento).map(([eventoId, items]) => {
               const gira = giras?.find((g) => g.id === eventoId);
               if (!gira) return null;
               const isMyAssignment = items!.some((c) => c.cambone_user_id === user?.id || c.medium_user_id === user?.id);
+              const criador = items?.[0]?.criado_por;
               return (
                 <Card key={eventoId} className={`bg-card border-border ${isMyAssignment ? "border-primary/40" : ""}`}>
                   <CardContent className="p-4">
@@ -547,6 +648,9 @@ export default function Escalas() {
                       <div>
                         <p className="font-display font-semibold text-sm">{gira.titulo}</p>
                         <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                        {criador && (
+                          <p className="text-xs text-muted-foreground mt-0.5">Escala feita por: <span className="text-foreground font-medium">{getCriadorNome(criador)}</span></p>
+                        )}
                       </div>
                       {canManageEscalas && (
                         <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
@@ -560,8 +664,10 @@ export default function Escalas() {
                         const isMe = c.cambone_user_id === user?.id;
                         return (
                           <div key={c.id} className={`flex items-center gap-2 text-sm ${isMe ? "text-primary font-medium" : ""}`}>
+                            <MemberAvatar userId={c.medium_user_id} size="xs" />
                             <span className="font-medium">{getNome(c.medium_user_id)}</span>
                             <span className="text-muted-foreground">→</span>
+                            <MemberAvatar userId={c.cambone_user_id} size="xs" />
                             <span>{getNome(c.cambone_user_id)}</span>
                             {isMe && <CheckCircle2 className="w-3 h-3 text-primary" />}
                           </div>
@@ -588,7 +694,7 @@ export default function Escalas() {
                 <div className="space-y-3">
                   <div>
                     <Label>Selecione a Gira</Label>
-                    <Select value={funcoesGiraId} onValueChange={setFuncoesGiraId}>
+                    <Select value={funcoesGiraId} onValueChange={(v) => { setFuncoesGiraId(v); setFuncoesAssignments({}); }}>
                       <SelectTrigger className="bg-secondary"><SelectValue placeholder="Escolha uma gira..." /></SelectTrigger>
                       <SelectContent>
                         {giras && giras.length > 0 ? giras.map((g) => (
@@ -601,19 +707,27 @@ export default function Escalas() {
                   {funcoesGiraId && (
                     <>
                       <Label>Atribuir funções</Label>
-                      {demaisFuncoes.map((f) => (
-                        <div key={f.value} className="flex items-center gap-2">
-                          <span className="text-xs w-32 shrink-0">{f.label}</span>
-                          <Select value={funcoesAssignments[f.value] || ""} onValueChange={(v) => setFuncoesAssignments((prev) => ({ ...prev, [f.value]: v }))}>
-                            <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                            <SelectContent>
-                              {membros?.map((m) => (
-                                <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ))}
+                      {demaisFuncoes.map((f) => {
+                        const currentValue = funcoesAssignments[f.value] || "";
+                        const availableMembers = membros?.filter(
+                          (m) => m.user_id === currentValue || !usedFuncoesUserIds.has(m.user_id)
+                        ) ?? [];
+
+                        return (
+                          <div key={f.value} className="flex items-center gap-2">
+                            <span className="text-xs w-32 shrink-0">{f.label}</span>
+                            <Select value={currentValue || BLANK_VALUE} onValueChange={(v) => handleFuncoesAssignment(f.value, v)}>
+                              <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value={BLANK_VALUE}>— Nenhum —</SelectItem>
+                                {availableMembers.map((m) => (
+                                  <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      })}
                       <Button className="w-full" onClick={() => createFuncoesGira.mutate()} disabled={createFuncoesGira.isPending}>
                         {createFuncoesGira.isPending ? "Salvando..." : "Salvar Funções"}
                       </Button>
@@ -629,6 +743,7 @@ export default function Escalas() {
               const gira = giras?.find((g) => g.id === eventoId);
               if (!gira) return null;
               const isMyFunc = items!.some((f) => f.user_id === user?.id);
+              const criador = items?.[0]?.criado_por;
               return (
                 <Card key={eventoId} className={`bg-card border-border ${isMyFunc ? "border-primary/40" : ""}`}>
                   <CardContent className="p-4">
@@ -636,6 +751,9 @@ export default function Escalas() {
                       <div>
                         <p className="font-display font-semibold text-sm">{gira.titulo}</p>
                         <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                        {criador && (
+                          <p className="text-xs text-muted-foreground mt-0.5">Escala feita por: <span className="text-foreground font-medium">{getCriadorNome(criador)}</span></p>
+                        )}
                       </div>
                       {canManageEscalas && (
                         <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
@@ -651,7 +769,8 @@ export default function Escalas() {
                         return (
                           <div key={f.id} className={`flex items-center justify-between text-sm ${isMe ? "text-primary font-medium" : "text-muted-foreground"}`}>
                             <span>{funcLabel}</span>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1.5">
+                              <MemberAvatar userId={f.user_id} size="xs" />
                               {getNome(f.user_id)}
                               {isMe && <CheckCircle2 className="w-3 h-3 text-primary" />}
                             </span>
