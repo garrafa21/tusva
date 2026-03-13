@@ -272,7 +272,7 @@ export default function Financeiro() {
                       <div className={`w-3 h-3 rounded-full ${config.bg}`} />
                       <div>
                         <p className="text-sm font-medium">{p.nome}</p>
-                        {m && <p className="text-xs text-muted-foreground">Vence dia {format(new Date(m.data_vencimento), "dd/MM")}</p>}
+                        {m && <p className="text-xs text-muted-foreground">Vence dia {format(parseDateOnlyLocal(m.data_vencimento), "dd/MM")}</p>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
