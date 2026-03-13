@@ -150,6 +150,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       supabase.realtime.setAuth(session.access_token);
     }
 
+    void syncPushSubscriptionIfNeeded(userId);
+
     const channel = supabase
       .channel(`user-notifications-${userId}`)
       .on(
