@@ -14,16 +14,241 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      avisos: {
+        Row: {
+          conteudo: string
+          created_at: string
+          criado_por: string | null
+          id: string
+          lido_por: string[]
+          prioridade: Database["public"]["Enums"]["prioridade_aviso"]
+          titulo: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          lido_por?: string[]
+          prioridade?: Database["public"]["Enums"]["prioridade_aviso"]
+          titulo: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          lido_por?: string[]
+          prioridade?: Database["public"]["Enums"]["prioridade_aviso"]
+          titulo?: string
+        }
+        Relationships: []
+      }
+      categorias_estudo: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      escalas_limpeza: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          data: string
+          descricao: string | null
+          id: string
+          responsaveis: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          data: string
+          descricao?: string | null
+          id?: string
+          responsaveis?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          id?: string
+          responsaveis?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      estudos: {
+        Row: {
+          categoria_id: string | null
+          conteudo: string
+          created_at: string
+          criado_por: string | null
+          id: string
+          imagem_url: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria_id?: string | null
+          conteudo: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          imagem_url?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          categoria_id?: string | null
+          conteudo?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          imagem_url?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estudos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias_estudo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          id: string
+          local: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          data_entrada: string | null
+          id: string
+          nome: string
+          nome_espiritual: string | null
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          data_entrada?: string | null
+          id?: string
+          nome: string
+          nome_espiritual?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          data_entrada?: string | null
+          id?: string
+          nome?: string
+          nome_espiritual?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "membro"
+      prioridade_aviso: "normal" | "importante" | "urgente"
+      tipo_evento: "gira" | "festa" | "reuniao" | "outro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +375,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "membro"],
+      prioridade_aviso: ["normal", "importante", "urgente"],
+      tipo_evento: ["gira", "festa", "reuniao", "outro"],
+    },
   },
 } as const
