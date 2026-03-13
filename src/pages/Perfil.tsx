@@ -215,8 +215,11 @@ export default function Perfil() {
       <Card className="bg-card border-border">
         <CardContent className="pt-6">
           <form onSubmit={handleSave} className="space-y-4">
-            <div><Label>Nome</Label><Input value={nome} onChange={(e) => setNome(e.target.value)} required className="bg-secondary" /></div>
-            <div><Label>Nome Espiritual</Label><Input value={nomeEsp} onChange={(e) => setNomeEsp(e.target.value)} className="bg-secondary" placeholder="Opcional" /></div>
+            <div>
+              <Label>Nome</Label>
+              <Input value={nome} onChange={(e) => setNome(e.target.value)} required className="bg-secondary" />
+              <p className="text-xs text-muted-foreground mt-1">Esse campo é apenas nome de exibição. Seu login não muda.</p>
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
           </form>
         </CardContent>
