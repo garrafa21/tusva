@@ -307,7 +307,7 @@ export default function Escalas() {
 
         {/* ========== LIMPEZA POR GIRA ========== */}
         <TabsContent value="gira">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openGira} onOpenChange={setOpenGira}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Nova Escala de Gira</Button>
