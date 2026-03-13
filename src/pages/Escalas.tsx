@@ -369,7 +369,7 @@ export default function Escalas() {
                           </p>
                           {items[0]?.descricao && <p className="text-xs text-muted-foreground">{items[0].descricao}</p>}
                         </div>
-                        {isAdmin && (
+                        {canManageEscalas && (
                           <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
                             onClick={() => { if (confirm("Excluir toda a escala desta gira?")) items.forEach((e) => deleteEscala.mutate(e.id)); }}>
                             <Trash2 className="w-4 h-4" />
