@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { syncPushSubscriptionIfNeeded } from "@/lib/pushNotifications";
 
 type AuthContextType = {
   session: Session | null;
