@@ -133,22 +133,27 @@ export default function Perfil() {
   };
 
   const handleNotificationToggle = async (checked: boolean) => {
+    if (!user) return;
+
     if (checked) {
-      if (typeof Notification === "undefined") {
-        toast({ title: "Notificações não suportadas neste navegador", variant: "destructive" });
-        return;
-      }
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
+      const ok = await enablePushNotifications(user.id);
+      if (ok) {
         setNotificationsEnabled(true);
         toast({ title: "Notificações ativadas!" });
       } else {
-        toast({ title: "Permissão negada", description: "Ative nas configurações do navegador", variant: "destructive" });
+        setNotificationsEnabled(false);
+        toast({
+          title: "Não foi possível ativar",
+          description: "No iPhone, instale o app na tela inicial e permita notificações.",
+          variant: "destructive",
+        });
       }
-    } else {
-      setNotificationsEnabled(false);
-      toast({ title: "Notificações desativadas" });
+      return;
     }
+
+    await disablePushNotifications(user.id);
+    setNotificationsEnabled(false);
+    toast({ title: "Notificações desativadas" });
   };
 
   return (
