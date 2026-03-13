@@ -45,7 +45,7 @@ export default function Dashboard() {
     },
   });
 
-  const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", outro: "Evento" };
+  const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", outro: "Evento" };
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
