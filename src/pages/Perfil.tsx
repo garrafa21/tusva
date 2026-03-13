@@ -97,13 +97,16 @@ export default function Perfil() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     setLoading(true);
-    const { error } = await supabase.from("profiles").update({ nome, nome_espiritual: nomeEsp || null }).eq("user_id", user!.id);
+    const { error } = await supabase.from("profiles").update({ nome }).eq("user_id", user.id);
     setLoading(false);
+
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Perfil atualizado!" });
+      toast({ title: "Nome atualizado!", description: "Isso altera apenas o nome de exibição, não o login." });
       window.location.reload();
     }
   };
