@@ -548,7 +548,7 @@ export default function Escalas() {
                         <p className="font-display font-semibold text-sm">{gira.titulo}</p>
                         <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
                       </div>
-                      {isAdmin && (
+                      {canManageEscalas && (
                         <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
                           onClick={() => { if (confirm("Excluir cambones desta gira?")) deleteCambone.mutate(eventoId); }}>
                           <Trash2 className="w-4 h-4" />
