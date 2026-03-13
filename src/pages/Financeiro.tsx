@@ -15,13 +15,13 @@ import { ptBR } from "date-fns/locale";
 const PIX_KEY = "terreirotusva@gmail.com";
 const VALOR_MENSALIDADE = 150;
 
-// Generate last 12 months for the calendar view
-function getLast12Months() {
+// Generate months for current year (Jan..Dec)
+function getCurrentYearMonths() {
   const months: string[] = [];
   const now = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const d = subMonths(now, i);
-    months.push(format(d, "yyyy-MM"));
+  const year = now.getFullYear();
+  for (let month = 1; month <= 12; month++) {
+    months.push(`${year}-${String(month).padStart(2, "0")}`);
   }
   return months;
 }
