@@ -51,13 +51,13 @@ export default function Login() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nome">Seu nome</Label>
+                <Label htmlFor="nome">Nome de usuário</Label>
                 <Input
                   id="nome"
                   type="text"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  placeholder="Ex: admin"
+                  placeholder="Ex: Gabriela"
                   required
                   className="bg-secondary"
                   autoCapitalize="none"

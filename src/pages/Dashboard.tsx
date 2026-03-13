@@ -34,16 +34,25 @@ export default function Dashboard() {
     },
   });
 
+  // Fetch ALL escalas for this user (not just admin)
   const { data: minhaEscala } = useQuery({
-    queryKey: ["minha-escala"],
+    queryKey: ["minha-escala", user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("escalas_limpeza")
         .select("*")
         .gte("data", new Date().toISOString().split("T")[0])
-        .order("data", { ascending: true })
-        .limit(1);
+        .order("data", { ascending: true });
       return data?.find((e) => e.responsaveis.includes(user?.id ?? "")) ?? null;
+    },
+    enabled: !!user,
+  });
+
+  const { data: membros } = useQuery({
+    queryKey: ["membros-dash"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      return data ?? [];
     },
   });
 
@@ -127,7 +136,7 @@ export default function Dashboard() {
         </Card>
       </Link>
 
-      {/* Escala */}
+      {/* Escala - shows for ALL users */}
       <Link to="/escalas">
         <Card className="bg-card border-border hover:border-primary/40 transition-colors mt-4">
           <CardHeader className="pb-2">
@@ -141,6 +150,7 @@ export default function Dashboard() {
               <p className="text-sm">
                 <span className="font-medium">{format(new Date(minhaEscala.data + "T00:00:00"), "dd 'de' MMMM", { locale: ptBR })}</span>
                 {minhaEscala.descricao && <span className="text-muted-foreground"> — {minhaEscala.descricao}</span>}
+                {(minhaEscala as any).funcao && <span className="text-muted-foreground"> ({(minhaEscala as any).funcao})</span>}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">Nenhuma limpeza agendada para você</p>

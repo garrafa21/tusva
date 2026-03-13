@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Plus, AlertTriangle, Star, Check, Trash2, Users, Shield } from "lucide-react";
+import { Bell, Plus, AlertTriangle, Star, Check, Trash2, Users, Shield, Sparkles } from "lucide-react";
 import { format, isToday, isTomorrow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -25,6 +25,11 @@ const demaisFuncoesLabel: Record<string, string> = {
   senha_chamar: "📢 Senha (Chamar Consulente)",
   senha_direcionar: "👉 Senha (Direcionar Consulente)",
   apoio_conga: "🕯️ Apoio Congá",
+};
+
+const funcoesLimpezaLabel: Record<string, string> = {
+  cozinha: "🍳 Cozinha", banheiro: "🚿 Banheiro", espaco_kids: "🧸 Espaço Kids",
+  conga: "🕯️ Congá", salao: "🏠 Salão", escada: "🪜 Escada", lixos: "🗑️ Lixos",
 };
 
 export default function Avisos() {
@@ -76,6 +81,19 @@ export default function Avisos() {
     },
   });
 
+  // Fetch escalas for personal limpeza cards
+  const { data: minhasEscalas } = useQuery({
+    queryKey: ["minhas-escalas-avisos"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("escalas_limpeza")
+        .select("*")
+        .gte("data", new Date().toISOString().split("T")[0])
+        .order("data", { ascending: true });
+      return data ?? [];
+    },
+  });
+
   const { data: membros } = useQuery({
     queryKey: ["membros-avisos"],
     queryFn: async () => {
@@ -86,13 +104,21 @@ export default function Avisos() {
 
   const createAviso = useMutation({
     mutationFn: async (form: FormData) => {
+      const titulo = form.get("titulo") as string;
+      const conteudo = form.get("conteudo") as string;
+      const prioridade = form.get("prioridade") as "normal" | "importante" | "urgente";
       const { error } = await supabase.from("avisos").insert({
-        titulo: form.get("titulo") as string,
-        conteudo: form.get("conteudo") as string,
-        prioridade: form.get("prioridade") as "normal" | "importante" | "urgente",
-        criado_por: user?.id,
+        titulo, conteudo, prioridade, criado_por: user?.id,
       });
       if (error) throw error;
+
+      // Send browser notification to all users with permission
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification(`Novo aviso ${prioridade === "urgente" ? "URGENTE" : prioridade === "importante" ? "IMPORTANTE" : ""}`, {
+          body: titulo,
+          icon: "/logo-tusva.jpg",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
@@ -116,13 +142,25 @@ export default function Avisos() {
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
+  const marcarComoLido = useMutation({
+    mutationFn: async (aviso: any) => {
+      const newLidoPor = [...(aviso.lido_por || []), user?.id];
+      const { error } = await supabase.from("avisos").update({ lido_por: newLidoPor }).eq("id", aviso.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["avisos"] });
+      queryClient.invalidateQueries({ queryKey: ["avisos-nao-lidos"] });
+    },
+  });
+
   const getNome = (id: string) => {
     const m = membros?.find((m) => m.user_id === id);
     return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
   };
 
   // Build personal assignment cards for upcoming giras
-  const personalCards: { tipo: string; texto: string; giraTitle: string; giraDate: Date }[] = [];
+  const personalCards: { tipo: string; texto: string; giraTitle: string; giraDate: Date; icon: "cambone" | "funcao" | "limpeza" }[] = [];
 
   if (proximasGiras && user) {
     for (const gira of proximasGiras) {
@@ -134,6 +172,7 @@ export default function Avisos() {
           texto: `Você irá cambonar ${getNome(meuCambone.medium_user_id)}`,
           giraTitle: gira.titulo,
           giraDate: new Date(gira.data_inicio),
+          icon: "cambone",
         });
       }
 
@@ -145,6 +184,27 @@ export default function Avisos() {
           texto: `Você será ${demaisFuncoesLabel[f.funcao] || f.funcao}`,
           giraTitle: gira.titulo,
           giraDate: new Date(gira.data_inicio),
+          icon: "funcao",
+        });
+      }
+    }
+  }
+
+  // Escalas de limpeza for this user
+  if (minhasEscalas && user) {
+    const minhas = minhasEscalas.filter((e) => e.responsaveis.includes(user.id));
+    for (const escala of minhas) {
+      const escalaDate = new Date(escala.data + "T00:00:00");
+      const diffDays = Math.ceil((escalaDate.getTime() - new Date().setHours(0,0,0,0)) / (1000*60*60*24));
+      if (diffDays <= 7) {
+        const funcaoStr = (escala as any).funcao ? (funcoesLimpezaLabel[(escala as any).funcao] || (escala as any).funcao) : "Limpeza geral";
+        const tipoStr = (escala as any).tipo_escala === "gira" ? "Limpeza pós-gira" : "Limpeza fim de semana";
+        personalCards.push({
+          tipo: "limpeza",
+          texto: `${tipoStr}: ${funcaoStr}`,
+          giraTitle: escala.descricao || "",
+          giraDate: escalaDate,
+          icon: "limpeza",
         });
       }
     }
@@ -186,16 +246,18 @@ export default function Avisos() {
       {/* Personal assignment cards */}
       {personalCards.length > 0 && (
         <div className="space-y-2 mb-6">
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Suas funções para hoje/amanhã</h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Suas atribuições</h2>
           {personalCards.map((card, i) => {
             const dateLabel = isToday(card.giraDate) ? "Hoje" : isTomorrow(card.giraDate) ? "Amanhã" : format(card.giraDate, "dd/MM");
             return (
               <Card key={i} className="bg-primary/5 border-primary/20">
                 <CardContent className="p-3 flex items-center gap-3">
-                  {card.tipo === "cambone" ? <Users className="w-5 h-5 text-primary shrink-0" /> : <Shield className="w-5 h-5 text-primary shrink-0" />}
+                  {card.icon === "cambone" ? <Users className="w-5 h-5 text-primary shrink-0" /> : 
+                   card.icon === "funcao" ? <Shield className="w-5 h-5 text-primary shrink-0" /> :
+                   <Sparkles className="w-5 h-5 text-primary shrink-0" />}
                   <div>
                     <p className="text-sm font-medium">{card.texto}</p>
-                    <p className="text-xs text-muted-foreground">{card.giraTitle} — {dateLabel} às {format(card.giraDate, "HH:mm")}</p>
+                    <p className="text-xs text-muted-foreground">{card.giraTitle} — {dateLabel}{card.icon !== "limpeza" && ` às ${format(card.giraDate, "HH:mm")}`}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -226,7 +288,14 @@ export default function Avisos() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
-                      {lido && <Check className="w-4 h-4 text-primary" />}
+                      {!lido ? (
+                        <Button size="sm" variant="ghost" className="text-xs gap-1 h-7 text-primary"
+                          onClick={() => marcarComoLido.mutate(a)}>
+                          <Check className="w-3 h-3" /> Lido
+                        </Button>
+                      ) : (
+                        <Check className="w-4 h-4 text-primary" />
+                      )}
                       {isAdmin && (
                         <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive"
                           onClick={() => { if (confirm("Excluir este aviso?")) deleteAviso.mutate(a.id); }}>
