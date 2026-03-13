@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, UserCheck, Shield } from "lucide-react";
+import { Users, Plus, UserCheck, Shield, Trash2 } from "lucide-react";
 
 function toEmail(nome: string) {
   return nome.trim().toLowerCase().replace(/\s+/g, ".") + "@tusva.app";
@@ -16,6 +16,8 @@ function toEmail(nome: string) {
 
 export default function AdminMembros() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +47,6 @@ export default function AdminMembros() {
 
     setLoading(true);
 
-    const { data: { session } } = await supabase.auth.getSession();
     const res = await supabase.functions.invoke("create-user", {
       body: { nome, senha, isAdmin: false },
     });
@@ -61,6 +62,20 @@ export default function AdminMembros() {
     toast({ title: "Filho(a) cadastrado(a)!", description: `${nome} foi cadastrado com sucesso.` });
     refetch();
   };
+
+  const deleteMembro = useMutation({
+    mutationFn: async (userId: string) => {
+      // Delete profile (cascade will handle user_roles if FK exists, otherwise delete manually)
+      await supabase.from("user_roles").delete().eq("user_id", userId);
+      const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-membros"] });
+      toast({ title: "Membro removido!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
@@ -99,6 +114,12 @@ export default function AdminMembros() {
                 <span className={`text-xs px-2 py-0.5 rounded-full ${m.isAdmin ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>
                   {m.isAdmin ? "Admin" : "Membro"}
                 </span>
+                {!m.isAdmin && m.user_id !== user?.id && (
+                  <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive shrink-0"
+                    onClick={() => { if (confirm(`Remover ${m.nome}?`)) deleteMembro.mutate(m.user_id); }}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}

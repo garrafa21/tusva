@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Plus, AlertTriangle, Star, Check } from "lucide-react";
+import { Bell, Plus, AlertTriangle, Star, Check, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -50,6 +50,19 @@ export default function Avisos() {
       queryClient.invalidateQueries({ queryKey: ["avisos-nao-lidos"] });
       setOpen(false);
       toast({ title: "Aviso publicado!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteAviso = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("avisos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["avisos"] });
+      queryClient.invalidateQueries({ queryKey: ["avisos-nao-lidos"] });
+      toast({ title: "Aviso excluído!" });
     },
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
@@ -108,7 +121,15 @@ export default function Avisos() {
                         {format(new Date(a.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       </p>
                     </div>
-                    {lido && <Check className="w-4 h-4 text-primary shrink-0 mt-1" />}
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      {lido && <Check className="w-4 h-4 text-primary" />}
+                      {isAdmin && (
+                        <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive"
+                          onClick={() => { if (confirm("Excluir este aviso?")) deleteAviso.mutate(a.id); }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

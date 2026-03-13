@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ClipboardList, Plus, CheckCircle2 } from "lucide-react";
+import { ClipboardList, Plus, CheckCircle2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -54,6 +54,18 @@ export default function Escalas() {
       setOpen(false);
       setSelectedMembers([]);
       toast({ title: "Escala criada!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteEscala = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("escalas_limpeza").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["escalas"] });
+      toast({ title: "Escala excluída!" });
     },
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
@@ -116,7 +128,7 @@ export default function Escalas() {
               <Card key={e.id} className={`bg-card border-border ${isPast ? "opacity-50" : ""} ${isMinhaEscala && !isPast ? "border-primary/40" : ""}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-display font-semibold text-sm">
                         {format(new Date(e.data + "T00:00:00"), "dd 'de' MMMM, EEEE", { locale: ptBR })}
                       </p>
@@ -125,11 +137,19 @@ export default function Escalas() {
                         Responsáveis: <span className="text-foreground">{getNomes(e.responsaveis)}</span>
                       </p>
                     </div>
-                    {isMinhaEscala && !isPast && (
-                      <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Você
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isMinhaEscala && !isPast && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Você
+                        </span>
+                      )}
+                      {isAdmin && (
+                        <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive"
+                          onClick={() => { if (confirm("Excluir esta escala?")) deleteEscala.mutate(e.id); }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
