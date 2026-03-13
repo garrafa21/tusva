@@ -14,9 +14,8 @@ import { ptBR } from "date-fns/locale";
 const PIX_KEY = "terreirotusva@gmail.com";
 const VALOR_MENSALIDADE = 150;
 
-function getCurrentYearMonths() {
+function getCurrentYearMonths(year: number) {
   const months: string[] = [];
-  const year = new Date().getFullYear();
   for (let month = 1; month <= 12; month++) {
     months.push(`${year}-${String(month).padStart(2, "0")}`);
   }
