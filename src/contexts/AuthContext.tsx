@@ -156,9 +156,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "avisos" },
         (payload) => {
-          const aviso = payload.new as { prioridade?: string; titulo?: string };
-          const prioridade = (aviso.prioridade ?? "normal").toUpperCase();
-          void showSystemNotification(`Você tem um aviso ${prioridade}`, aviso.titulo ?? "Novo aviso disponível");
+          const aviso = payload.new as { titulo?: string; conteudo?: string };
+          void showSystemNotification(aviso.titulo ?? "Novo aviso", aviso.conteudo ?? "Você recebeu um novo aviso.");
         }
       )
       .on(
