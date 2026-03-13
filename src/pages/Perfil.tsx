@@ -32,7 +32,6 @@ export default function Perfil() {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(profile?.nome ?? "");
-  const [nomeEsp, setNomeEsp] = useState(profile?.nome_espiritual ?? "");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
