@@ -106,11 +106,18 @@ export default function Avisos() {
 
   const createAviso = useMutation({
     mutationFn: async (form: FormData) => {
-      const titulo = form.get("titulo") as string;
-      const conteudo = form.get("conteudo") as string;
+      const titulo = ((form.get("titulo") as string) || "").trim();
+      const conteudo = ((form.get("conteudo") as string) || "").trim();
       const prioridade = form.get("prioridade") as "normal" | "importante" | "urgente";
+
+      if (titulo.length > 50) throw new Error("Título pode ter no máximo 50 caracteres");
+      if (conteudo.length > 120) throw new Error("Conteúdo pode ter no máximo 120 caracteres");
+
       const { error } = await supabase.from("avisos").insert({
-        titulo, conteudo, prioridade, criado_por: user?.id,
+        titulo,
+        conteudo,
+        prioridade,
+        criado_por: user?.id,
       });
       if (error) throw error;
     },
