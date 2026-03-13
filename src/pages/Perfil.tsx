@@ -52,6 +52,14 @@ export default function Perfil() {
 
   const avatarUrl = profile?.avatar_url;
 
+  useEffect(() => {
+    setNome(profile?.nome ?? "");
+  }, [profile?.nome]);
+
+  useEffect(() => {
+    setNotificationsEnabled(typeof Notification !== "undefined" && Notification.permission === "granted");
+  }, []);
+
   const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
   }, []);
