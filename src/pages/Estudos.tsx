@@ -67,7 +67,12 @@ export default function Estudos() {
   const { data: entidades, isLoading: loadingEntidades } = useQuery({
     queryKey: ["entidades"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("entidades").select("*").order("categoria").order("nome");
+      const { data, error } = await supabase
+        .from("entidades")
+        .select("*")
+        .order("medium_user_id", { ascending: true })
+        .order("categoria", { ascending: true })
+        .order("nome", { ascending: true });
       if (error) throw error;
       return data;
     },
