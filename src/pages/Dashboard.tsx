@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, Sparkles, DollarSign } from "lucide-react";
+import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
@@ -45,7 +45,7 @@ export default function Dashboard() {
     },
   });
 
-  const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", outro: "Evento" };
+  const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", caboclos: "🪶 Caboclos", pretos_velhos: "🕯️ Pretos Velhos", eres: "🍭 Erês", baianos: "🌴 Baianos", marinheiros: "⚓ Marinheiros", boiadeiros: "🐂 Boiadeiros", ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda", outro: "Evento" };
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
@@ -151,9 +151,9 @@ export default function Dashboard() {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3 mt-4">
-        <Link to="/entidades" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Entidades</span>
+        <Link to="/estudos" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+          <BookOpen className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">Estudos</span>
         </Link>
         <Link to="/financeiro" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
           <DollarSign className="w-5 h-5 text-accent" />
