@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Camera, Bell, Lock } from "lucide-react";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
+import { disablePushNotifications, enablePushNotifications } from "@/lib/pushNotifications";
 
 async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
   const image = new Image();
