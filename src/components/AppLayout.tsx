@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, ClipboardList, Bell, BookOpen, Home, Users, LogOut, User, Settings } from "lucide-react";
+import { Calendar, ClipboardList, Bell, BookOpen, Home, Users, LogOut, User, Settings, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
 
 const navItems = [
   { to: "/", icon: Home, label: "Início" },
@@ -18,6 +19,7 @@ const adminItems = [
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, profile, signOut } = useAuth();
   const location = useLocation();
+  const { isDark, toggle } = useTheme();
 
   const allItems = [...navItems, ...(isAdmin ? adminItems : [])];
 
@@ -28,7 +30,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo-tusva.jpg" alt="TUSVA" className="w-8 h-8 rounded-full object-cover" />
-            <span className="font-display text-sm font-semibold text-gold hidden sm:inline">TUSVA</span>
+            <span className="font-display text-sm text-primary hidden sm:inline">TUSVA</span>
           </Link>
 
           {/* Desktop nav */}
@@ -40,7 +42,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
                   location.pathname === item.to
-                    ? "bg-primary/20 text-primary"
+                    ? "bg-primary/10 text-primary font-semibold"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 )}
               >
@@ -50,9 +52,12 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <button onClick={toggle} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Alternar tema">
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <Link to="/perfil" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-secondary transition-colors">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-4 h-4 text-primary" />
               </div>
               <span className="text-xs text-muted-foreground hidden sm:inline">{profile?.nome?.split(" ")[0]}</span>
@@ -79,11 +84,11 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               className={cn(
                 "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs transition-colors min-w-[3.5rem]",
                 location.pathname === item.to
-                  ? "text-primary"
+                  ? "text-primary font-semibold"
                   : "text-muted-foreground"
               )}
             >
-              <item.icon className={cn("w-5 h-5", location.pathname === item.to && "drop-shadow-[0_0_6px_hsl(270,60%,55%)]")} />
+              <item.icon className="w-5 h-5" />
               <span className="truncate">{item.label}</span>
             </Link>
           ))}
@@ -93,7 +98,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               className={cn(
                 "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs transition-colors min-w-[3.5rem]",
                 location.pathname.startsWith("/admin")
-                  ? "text-gold"
+                  ? "text-primary font-semibold"
                   : "text-muted-foreground"
               )}
             >

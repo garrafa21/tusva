@@ -2,10 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
+    --background: 0 0% 98%;
+    --foreground: 240 10% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 15%;
+
+    --primary: 270 55% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 10% 94%;
+    --secondary-foreground: 240 10% 15%;
+
+    --muted: 270 8% 92%;
+    --muted-foreground: 240 5% 46%;
+
+    --accent: 42 80% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 8% 88%;
+    --input: 270 8% 88%;
+    --ring: 270 55% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 10% 15%;
+    --sidebar-primary: 270 55% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 10% 94%;
+    --sidebar-accent-foreground: 240 10% 15%;
+    --sidebar-border: 270 8% 90%;
+    --sidebar-ring: 270 55% 50%;
+
+    --gold: 42 80% 50%;
+    --gold-foreground: 0 0% 100%;
+  }
+
+  .dark {
     --background: 270 15% 8%;
     --foreground: 40 20% 92%;
 
@@ -34,8 +78,6 @@
     --input: 270 10% 20%;
     --ring: 270 60% 55%;
 
-    --radius: 0.75rem;
-
     --sidebar-background: 270 12% 10%;
     --sidebar-foreground: 40 20% 92%;
     --sidebar-primary: 270 60% 55%;
@@ -47,7 +89,6 @@
 
     --gold: 42 80% 55%;
     --gold-foreground: 270 15% 8%;
-    --purple-glow: 270 80% 65%;
   }
 }
 
@@ -57,17 +98,19 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground;
+    font-family: 'Montserrat', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cinzel', serif;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Cinzel', serif;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
   }
 }
