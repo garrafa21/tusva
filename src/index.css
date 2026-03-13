@@ -47,6 +47,9 @@
 
     --gold: 42 80% 50%;
     --gold-foreground: 0 0% 100%;
+
+    --cambone: 208 88% 45%;
+    --cambone-foreground: 0 0% 100%;
   }
 
   .dark {
