@@ -7,7 +7,6 @@ import { useTheme } from "@/hooks/use-theme";
 const navItems = [
   { to: "/", icon: Home, label: "Início" },
   { to: "/calendario", icon: Calendar, label: "Calendário" },
-  { to: "/entidades", icon: Sparkles, label: "Entidades" },
   { to: "/avisos", icon: Bell, label: "Avisos" },
   { to: "/financeiro", icon: DollarSign, label: "Financeiro" },
 ];
