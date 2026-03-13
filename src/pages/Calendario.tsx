@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Calendar, Plus, Clock, Trash2, CheckCircle2, XCircle, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 const tipoLabel: Record<string, string> = {
   gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", outro: "Outro",
