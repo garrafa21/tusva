@@ -45,21 +45,15 @@ export default function AdminMembros() {
 
     setLoading(true);
 
-    const email = toEmail(nome);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: senha,
-      options: { data: { nome } },
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await supabase.functions.invoke("create-user", {
+      body: { nome, senha, isAdmin: false },
     });
 
-    if (error) {
-      toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+    if (res.error || res.data?.error) {
+      toast({ title: "Erro ao cadastrar", description: res.data?.error || res.error?.message, variant: "destructive" });
       setLoading(false);
       return;
-    }
-
-    if (data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role: "membro" as const });
     }
 
     setLoading(false);
