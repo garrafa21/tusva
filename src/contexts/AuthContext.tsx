@@ -37,6 +37,18 @@ const limpezaLabel: Record<string, string> = {
   lixos: "Lixos",
 };
 
+const linhaEspiritualLabel: Record<string, string> = {
+  caboclos: "Caboclos",
+  pretos_velhos: "Pretos Velhos",
+  eres: "Erês",
+  baianos: "Baianos",
+  marinheiros: "Marinheiros",
+  boiadeiros: "Boiadeiros",
+  ciganos: "Ciganos",
+  malandragem: "Malandragem",
+  esquerda: "Esquerda",
+};
+
 async function showSystemNotification(title: string, body: string) {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
 
