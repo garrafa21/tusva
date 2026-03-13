@@ -144,15 +144,15 @@ export default function Avisos() {
   });
 
   const marcarComoLido = useMutation({
-    mutationFn: async (aviso: any) => {
-      const newLidoPor = [...(aviso.lido_por || []), user?.id];
-      const { error } = await supabase.from("avisos").update({ lido_por: newLidoPor }).eq("id", aviso.id);
+    mutationFn: async (avisoId: string) => {
+      const { error } = await supabase.rpc("mark_aviso_lido", { _aviso_id: avisoId });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
       queryClient.invalidateQueries({ queryKey: ["avisos-nao-lidos"] });
     },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
   const getNome = (id: string) => {
