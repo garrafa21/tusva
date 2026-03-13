@@ -44,6 +44,38 @@ export type Database = {
         }
         Relationships: []
       }
+      cambones: {
+        Row: {
+          cambone_user_id: string
+          created_at: string
+          evento_id: string
+          id: string
+          medium_user_id: string
+        }
+        Insert: {
+          cambone_user_id: string
+          created_at?: string
+          evento_id: string
+          id?: string
+          medium_user_id: string
+        }
+        Update: {
+          cambone_user_id?: string
+          created_at?: string
+          evento_id?: string
+          id?: string
+          medium_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cambones_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias_estudo: {
         Row: {
           created_at: string
@@ -64,6 +96,38 @@ export type Database = {
           nome?: string
         }
         Relationships: []
+      }
+      confirmacoes_presenca: {
+        Row: {
+          created_at: string
+          evento_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evento_id: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          evento_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confirmacoes_presenca_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       entidades: {
         Row: {
@@ -210,6 +274,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      funcoes_gira: {
+        Row: {
+          created_at: string
+          evento_id: string
+          funcao: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evento_id: string
+          funcao: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          evento_id?: string
+          funcao?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcoes_gira_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mensalidades: {
         Row: {
