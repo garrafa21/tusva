@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, CheckCircle, AlertTriangle, Clock, Copy, CalendarDays } from "lucide-react";
-import { format, isBefore, subMonths, addMonths } from "date-fns";
+import { format, isBefore, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const PIX_KEY = "terreirotusva@gmail.com";
