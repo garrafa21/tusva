@@ -171,6 +171,7 @@ export type Database = {
           data_inicio: string
           descricao: string | null
           id: string
+          linha: string | null
           local: string | null
           tipo: Database["public"]["Enums"]["tipo_evento"]
           titulo: string
@@ -183,6 +184,7 @@ export type Database = {
           data_inicio: string
           descricao?: string | null
           id?: string
+          linha?: string | null
           local?: string | null
           tipo?: Database["public"]["Enums"]["tipo_evento"]
           titulo: string
@@ -195,6 +197,7 @@ export type Database = {
           data_inicio?: string
           descricao?: string | null
           id?: string
+          linha?: string | null
           local?: string | null
           tipo?: Database["public"]["Enums"]["tipo_evento"]
           titulo?: string
