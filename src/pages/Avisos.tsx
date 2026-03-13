@@ -189,18 +189,15 @@ export default function Avisos() {
     const minhas = minhasEscalas.filter((e) => e.responsaveis.includes(user.id));
     for (const escala of minhas) {
       const escalaDate = new Date(escala.data + "T00:00:00");
-      const diffDays = Math.ceil((escalaDate.getTime() - new Date().setHours(0,0,0,0)) / (1000*60*60*24));
-      if (diffDays <= 7) {
-        const funcaoStr = (escala as any).funcao ? (funcoesLimpezaLabel[(escala as any).funcao] || (escala as any).funcao) : "Limpeza geral";
-        const tipoStr = (escala as any).tipo_escala === "gira" ? "Limpeza pós-gira" : "Limpeza fim de semana";
-        personalCards.push({
-          tipo: "limpeza",
-          texto: `${tipoStr}: ${funcaoStr}`,
-          giraTitle: escala.descricao || "",
-          giraDate: escalaDate,
-          icon: "limpeza",
-        });
-      }
+      const funcaoStr = (escala as any).funcao ? (funcoesLimpezaLabel[(escala as any).funcao] || (escala as any).funcao) : "Limpeza geral";
+      const tipoStr = (escala as any).tipo_escala === "gira" ? "Limpeza pós-gira" : "Limpeza fim de semana";
+      personalCards.push({
+        tipo: "limpeza",
+        texto: `${tipoStr}: ${funcaoStr}`,
+        giraTitle: escala.descricao || "",
+        giraDate: escalaDate,
+        icon: "limpeza",
+      });
     }
   }
 
