@@ -89,10 +89,10 @@ export default function Financeiro() {
       const mensalidadeAtual = (mensalidades ?? []).find((m) => m.user_id === user?.id && m.mes_referencia === mesAtual);
       if (!mensalidadeAtual) throw new Error("Gere a mensalidade deste mês primeiro");
 
-      const { error } = await supabase.rpc("set_mensalidade_status", {
+      const { error } = await supabase.rpc("set_mensalidade_status" as any, {
         _mensalidade_id: mensalidadeAtual.id,
         _status: status,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {

@@ -145,7 +145,7 @@ export default function Avisos() {
 
   const marcarComoLido = useMutation({
     mutationFn: async (avisoId: string) => {
-      const { error } = await supabase.rpc("mark_aviso_lido", { _aviso_id: avisoId });
+      const { error } = await supabase.rpc("mark_aviso_lido" as any, { _aviso_id: avisoId } as any);
       if (error) throw error;
     },
     onSuccess: () => {
