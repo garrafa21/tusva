@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Plus, Clock, Trash2, Pencil } from "lucide-react";
+import { Calendar, Plus, Clock, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -56,10 +56,9 @@ export default function Calendario() {
 
   const createEvento = useMutation({
     mutationFn: async (form: FormData) => {
-      const dia = form.get("dia") as string;
+      const dataStr = form.get("data") as string; // YYYY-MM-DD from native date input
       const hora = form.get("hora") as string;
-      const year = new Date().getFullYear();
-      const dataInicio = `${year}-${dia}T${hora}:00`;
+      const dataInicio = `${dataStr}T${hora}:00`;
 
       const { error } = await supabase.from("eventos").insert({
         titulo: form.get("titulo") as string,
@@ -124,7 +123,7 @@ export default function Calendario() {
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(new Date(e.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
               </div>
             </div>
-            {isAdmin && !isPast && (
+            {isAdmin && (
               <Button
                 size="icon"
                 variant="ghost"
@@ -180,7 +179,7 @@ export default function Calendario() {
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Dia (mês/dia)</Label><Input name="dia" type="text" placeholder="03-15" required className="bg-secondary" pattern="\d{2}-\d{2}" title="Formato: MM-DD (ex: 03-15)" /></div>
+                  <div><Label>Data</Label><Input name="data" type="date" required className="bg-secondary" /></div>
                   <div><Label>Horário</Label><Input name="hora" type="time" required className="bg-secondary" defaultValue="19:00" /></div>
                 </div>
                 <div><Label>Descrição (opcional)</Label><Textarea name="descricao" className="bg-secondary" /></div>
