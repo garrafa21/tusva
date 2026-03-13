@@ -115,8 +115,9 @@ export default function Financeiro() {
     toast({ title: "Chave PIX copiada!", description: PIX_KEY });
   };
 
-  const now = new Date();
-  const monthsOfYear = getCurrentYearMonths();
+  const now = serverNow ? new Date(serverNow) : new Date();
+  const currentYear = now.getFullYear();
+  const monthsOfYear = getCurrentYearMonths(currentYear);
   const userMensalidades = mensalidades?.filter((m) => m.user_id === user?.id) ?? [];
   const mesAtualRef = format(now, "yyyy-MM");
 
