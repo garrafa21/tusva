@@ -10,6 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { Users, Plus, UserCheck, Shield } from "lucide-react";
 
+function toEmail(nome: string) {
+  return nome.trim().toLowerCase().replace(/\s+/g, ".") + "@tusva.app";
+}
+
 export default function AdminMembros() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -31,7 +35,6 @@ export default function AdminMembros() {
   const handleCadastrar = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget as HTMLFormElement);
-    const email = form.get("email") as string;
     const nome = form.get("nome") as string;
     const senha = form.get("senha") as string;
 
@@ -42,7 +45,7 @@ export default function AdminMembros() {
 
     setLoading(true);
 
-    // Create user via Supabase Auth admin (using signUp since we don't have admin API on client)
+    const email = toEmail(nome);
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
@@ -56,7 +59,6 @@ export default function AdminMembros() {
     }
 
     if (data.user) {
-      // Add membro role
       await supabase.from("user_roles").insert({ user_id: data.user.id, role: "membro" as const });
     }
 
@@ -69,18 +71,17 @@ export default function AdminMembros() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-xl font-bold flex items-center gap-2">
-          <Users className="w-5 h-5 text-gold" /> Membros da Casa
+        <h1 className="font-display text-xl flex items-center gap-2">
+          <Users className="w-5 h-5 text-primary" /> Membros da Casa
         </h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Cadastrar</Button></DialogTrigger>
           <DialogContent className="bg-card border-border">
             <DialogHeader><DialogTitle className="font-display">Cadastrar Filho(a)</DialogTitle></DialogHeader>
             <form onSubmit={handleCadastrar} className="space-y-3">
-              <div><Label>Nome completo</Label><Input name="nome" required className="bg-secondary" /></div>
-              <div><Label>Email</Label><Input name="email" type="email" required className="bg-secondary" /></div>
+              <div><Label>Nome completo</Label><Input name="nome" required className="bg-secondary" placeholder="Ex: João da Silva" /></div>
               <div><Label>Senha inicial</Label><Input name="senha" type="text" required className="bg-secondary" placeholder="Mín. 6 caracteres" /></div>
-              <p className="text-xs text-muted-foreground">O filho poderá trocar a senha depois no perfil.</p>
+              <p className="text-xs text-muted-foreground">O filho usará o nome para entrar no app. A senha poderá ser trocada depois.</p>
               <Button type="submit" className="w-full" disabled={loading}>{loading ? "Cadastrando..." : "Cadastrar"}</Button>
             </form>
           </DialogContent>
@@ -94,14 +95,14 @@ export default function AdminMembros() {
           {membros?.map((m) => (
             <Card key={m.id} className="bg-card border-border">
               <CardContent className="p-3 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   {m.isAdmin ? <Shield className="w-4 h-4 text-gold" /> : <UserCheck className="w-4 h-4 text-primary" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{m.nome}</p>
                   {m.nome_espiritual && <p className="text-xs text-primary truncate">{m.nome_espiritual}</p>}
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${m.isAdmin ? "bg-gold/20 text-gold" : "bg-secondary text-muted-foreground"}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${m.isAdmin ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>
                   {m.isAdmin ? "Admin" : "Membro"}
                 </span>
               </CardContent>
