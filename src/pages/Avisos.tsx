@@ -54,7 +54,7 @@ export default function Avisos() {
     },
   });
 
-  // Show assignments until the gira day passes (remove only on next day)
+  // Only show giras that haven't passed yet
   const { data: proximasGiras } = useQuery({
     queryKey: ["proximas-giras-avisos"],
     queryFn: async () => {
@@ -62,7 +62,7 @@ export default function Avisos() {
         .from("eventos")
         .select("*")
         .in("tipo", ["gira", "desenvolvimento"])
-        .gte("data_inicio", startOfLocalDayIso())
+        .gte("data_inicio", new Date().toISOString())
         .order("data_inicio", { ascending: true });
       return data ?? [];
     },

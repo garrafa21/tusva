@@ -80,8 +80,7 @@ export default function Calendario() {
     mutationFn: async (form: FormData) => {
       const dataStr = form.get("data") as string;
       const hora = form.get("hora") as string;
-      const tz = getTimezoneOffsetStr();
-      const dataInicio = `${dataStr}T${hora}:00${tz}`;
+      const dataInicio = `${dataStr}T${hora}:00${SAO_PAULO_OFFSET}`;
 
       if ((selectedTipo === "gira" || selectedTipo === "desenvolvimento") && !selectedLinha) {
         throw new Error("Selecione a linha espiritual para a gira");

@@ -662,7 +662,15 @@ export default function Estudos() {
                 return (
                   <Collapsible key={mediumId} className="border border-border rounded-lg bg-card">
                     <CollapsibleTrigger className="w-full p-3 flex items-center justify-between text-left">
-                      <span className="font-medium text-sm">{getNomeMembroById(mediumId)}</span>
+                      <span className="font-medium text-sm flex items-center gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={membros?.find((m) => m.user_id === mediumId)?.avatar_url ?? undefined} />
+                          <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                            {getNomeMembroById(mediumId).charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {getNomeMembroById(mediumId)}
+                      </span>
                       <span className="flex items-center gap-2 text-xs text-muted-foreground">
                         {items.length} entidade(s)
                         <ChevronDown className="w-4 h-4" />
