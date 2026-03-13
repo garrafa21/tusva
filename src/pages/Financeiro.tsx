@@ -261,7 +261,7 @@ export default function Financeiro() {
           {profiles?.map((p) => {
             const mesAtual = format(now, "yyyy-MM");
             const m = mensalidades?.find((m) => m.user_id === p.user_id && m.mes_referencia === mesAtual);
-            const status = m ? (m.status === "pago" ? "pago" : (isBefore(new Date(m.data_vencimento), now) ? "atrasado" : "pendente")) : "nao_gerado";
+            const status = m ? (m.status === "pago" ? "pago" : (isBefore(parseDateOnlyLocal(m.data_vencimento), now) ? "atrasado" : "pendente")) : "nao_gerado";
             const config = statusConfig[status];
 
             return (
