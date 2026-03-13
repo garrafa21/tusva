@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,13 +6,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Plus, UserCheck, Shield, Trash2 } from "lucide-react";
 
-function toEmail(nome: string) {
-  return nome.trim().toLowerCase().replace(/\s+/g, ".") + "@tusva.app";
-}
+type CategoriaMembro = "admin" | "escala" | "membro";
+
+const categoriaMeta: Record<CategoriaMembro, { label: string; badgeClass: string }> = {
+  admin: { label: "Admin", badgeClass: "bg-accent/20 text-accent" },
+  escala: { label: "Cambone Chefe", badgeClass: "bg-cambone/20 text-cambone" },
+  membro: { label: "Membro", badgeClass: "bg-secondary text-muted-foreground" },
+};
 
 export default function AdminMembros() {
   const { toast } = useToast();
@@ -20,19 +25,43 @@ export default function AdminMembros() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [novaCategoria, setNovaCategoria] = useState<CategoriaMembro>("membro");
 
   const { data: membros, isLoading, refetch } = useQuery({
     queryKey: ["admin-membros"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase.from("profiles").select("*").order("nome");
       if (error) throw error;
-      const { data: roles } = await supabase.from("user_roles").select("*");
-      return profiles.map((p) => ({
-        ...p,
-        isAdmin: roles?.some((r) => r.user_id === p.user_id && r.role === "admin") ?? false,
-      }));
+
+      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("user_id, role");
+      if (rolesError) throw rolesError;
+
+      const roleByUser = new Map<string, Set<string>>();
+      (roles ?? []).forEach((r) => {
+        const current = roleByUser.get(r.user_id) ?? new Set<string>();
+        current.add(r.role);
+        roleByUser.set(r.user_id, current);
+      });
+
+      return (profiles ?? []).map((p) => {
+        const userRoles = roleByUser.get(p.user_id) ?? new Set<string>();
+        const categoria: CategoriaMembro = userRoles.has("admin") ? "admin" : userRoles.has("escala") ? "escala" : "membro";
+        return {
+          ...p,
+          categoria,
+          isAdmin: categoria === "admin",
+        };
+      });
     },
   });
+
+  const resumoCategorias = useMemo(() => {
+    return {
+      admin: membros?.filter((m) => m.categoria === "admin").length ?? 0,
+      escala: membros?.filter((m) => m.categoria === "escala").length ?? 0,
+      membro: membros?.filter((m) => m.categoria === "membro").length ?? 0,
+    };
+  }, [membros]);
 
   const handleCadastrar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +77,7 @@ export default function AdminMembros() {
     setLoading(true);
 
     const res = await supabase.functions.invoke("create-user", {
-      body: { nome, senha, isAdmin: false },
+      body: { nome, senha, role: novaCategoria, isAdmin: novaCategoria === "admin" },
     });
 
     if (res.error || res.data?.error) {
@@ -59,13 +88,13 @@ export default function AdminMembros() {
 
     setLoading(false);
     setOpen(false);
+    setNovaCategoria("membro");
     toast({ title: "Filho(a) cadastrado(a)!", description: `${nome} foi cadastrado com sucesso.` });
     refetch();
   };
 
   const deleteMembro = useMutation({
     mutationFn: async (userId: string) => {
-      // Delete profile (cascade will handle user_roles if FK exists, otherwise delete manually)
       await supabase.from("user_roles").delete().eq("user_id", userId);
       const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
       if (error) throw error;
@@ -90,11 +119,30 @@ export default function AdminMembros() {
             <form onSubmit={handleCadastrar} className="space-y-3">
               <div><Label>Nome completo</Label><Input name="nome" required className="bg-secondary" placeholder="Ex: João da Silva" /></div>
               <div><Label>Senha inicial</Label><Input name="senha" type="text" required className="bg-secondary" placeholder="Mín. 6 caracteres" /></div>
-              <p className="text-xs text-muted-foreground">O filho usará o nome para entrar no app. A senha poderá ser trocada depois.</p>
+              <div>
+                <Label>Categoria</Label>
+                <Select value={novaCategoria} onValueChange={(value) => setNovaCategoria(value as CategoriaMembro)}>
+                  <SelectTrigger className="bg-secondary"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="membro">Membro</SelectItem>
+                    <SelectItem value="escala">Cambone Chefe</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">O login é criado pelo admin e não muda quando o nome de exibição for alterado.</p>
               <Button type="submit" className="w-full" disabled={loading}>{loading ? "Cadastrando..." : "Cadastrar"}</Button>
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="flex gap-2 mb-4 text-xs text-muted-foreground">
+        <span>Admin: {resumoCategorias.admin}</span>
+        <span>•</span>
+        <span>Cambone Chefe: {resumoCategorias.escala}</span>
+        <span>•</span>
+        <span>Membro: {resumoCategorias.membro}</span>
       </div>
 
       {isLoading ? (
@@ -105,14 +153,13 @@ export default function AdminMembros() {
             <Card key={m.id} className="bg-card border-border">
               <CardContent className="p-3 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  {m.isAdmin ? <Shield className="w-4 h-4 text-gold" /> : <UserCheck className="w-4 h-4 text-primary" />}
+                  {m.categoria === "admin" ? <Shield className="w-4 h-4 text-gold" /> : <UserCheck className="w-4 h-4 text-primary" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{m.nome}</p>
-                  {m.nome_espiritual && <p className="text-xs text-primary truncate">{m.nome_espiritual}</p>}
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${m.isAdmin ? "bg-accent/20 text-accent" : "bg-secondary text-muted-foreground"}`}>
-                  {m.isAdmin ? "Admin" : "Membro"}
+                <span className={`text-xs px-2 py-0.5 rounded-full ${categoriaMeta[m.categoria].badgeClass}`}>
+                  {categoriaMeta[m.categoria].label}
                 </span>
                 {!m.isAdmin && m.user_id !== user?.id && (
                   <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive shrink-0"

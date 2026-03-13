@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Camera, Bell, Lock } from "lucide-react";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
+import { disablePushNotifications, enablePushNotifications } from "@/lib/pushNotifications";
 
 async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
   const image = new Image();
@@ -28,10 +29,8 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
 export default function Perfil() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(profile?.nome ?? "");
-  const [nomeEsp, setNomeEsp] = useState(profile?.nome_espiritual ?? "");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
@@ -51,6 +50,14 @@ export default function Perfil() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   const avatarUrl = profile?.avatar_url;
+
+  useEffect(() => {
+    setNome(profile?.nome ?? "");
+  }, [profile?.nome]);
+
+  useEffect(() => {
+    setNotificationsEnabled(typeof Notification !== "undefined" && Notification.permission === "granted");
+  }, []);
 
   const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
@@ -97,13 +104,16 @@ export default function Perfil() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     setLoading(true);
-    const { error } = await supabase.from("profiles").update({ nome, nome_espiritual: nomeEsp || null }).eq("user_id", user!.id);
+    const { error } = await supabase.from("profiles").update({ nome }).eq("user_id", user.id);
     setLoading(false);
+
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Perfil atualizado!" });
+      toast({ title: "Nome atualizado!", description: "Isso altera apenas o nome de exibição, não o login." });
       window.location.reload();
     }
   };
@@ -130,22 +140,27 @@ export default function Perfil() {
   };
 
   const handleNotificationToggle = async (checked: boolean) => {
+    if (!user) return;
+
     if (checked) {
-      if (typeof Notification === "undefined") {
-        toast({ title: "Notificações não suportadas neste navegador", variant: "destructive" });
-        return;
-      }
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
+      const ok = await enablePushNotifications(user.id);
+      if (ok) {
         setNotificationsEnabled(true);
         toast({ title: "Notificações ativadas!" });
       } else {
-        toast({ title: "Permissão negada", description: "Ative nas configurações do navegador", variant: "destructive" });
+        setNotificationsEnabled(false);
+        toast({
+          title: "Não foi possível ativar",
+          description: "No iPhone, instale o app na tela inicial e permita notificações.",
+          variant: "destructive",
+        });
       }
-    } else {
-      setNotificationsEnabled(false);
-      toast({ title: "Notificações desativadas" });
+      return;
     }
+
+    await disablePushNotifications(user.id);
+    setNotificationsEnabled(false);
+    toast({ title: "Notificações desativadas" });
   };
 
   return (
@@ -207,8 +222,11 @@ export default function Perfil() {
       <Card className="bg-card border-border">
         <CardContent className="pt-6">
           <form onSubmit={handleSave} className="space-y-4">
-            <div><Label>Nome</Label><Input value={nome} onChange={(e) => setNome(e.target.value)} required className="bg-secondary" /></div>
-            <div><Label>Nome Espiritual</Label><Input value={nomeEsp} onChange={(e) => setNomeEsp(e.target.value)} className="bg-secondary" placeholder="Opcional" /></div>
+            <div>
+              <Label>Nome</Label>
+              <Input value={nome} onChange={(e) => setNome(e.target.value)} required className="bg-secondary" />
+              <p className="text-xs text-muted-foreground mt-1">Esse campo é apenas nome de exibição. Seu login não muda.</p>
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
           </form>
         </CardContent>

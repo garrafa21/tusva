@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { syncPushSubscriptionIfNeeded } from "@/lib/pushNotifications";
 
 type AuthContextType = {
   session: Session | null;
@@ -149,15 +150,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       supabase.realtime.setAuth(session.access_token);
     }
 
+    void syncPushSubscriptionIfNeeded(userId);
+
     const channel = supabase
       .channel(`user-notifications-${userId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "avisos" },
         (payload) => {
-          const aviso = payload.new as { prioridade?: string; titulo?: string };
-          const prioridade = (aviso.prioridade ?? "normal").toUpperCase();
-          void showSystemNotification(`Você tem um aviso ${prioridade}`, aviso.titulo ?? "Novo aviso disponível");
+          const aviso = payload.new as { titulo?: string; conteudo?: string };
+          void showSystemNotification(aviso.titulo ?? "Novo aviso", aviso.conteudo ?? "Você recebeu um novo aviso.");
         }
       )
       .on(

@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Bell, Plus, AlertTriangle, Star, Check, Trash2, Users, Shield, Sparkles } from "lucide-react";
 import { format, isToday, isTomorrow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 const prioridadeCor: Record<string, string> = {
   normal: "border-l-muted-foreground",
@@ -120,6 +121,12 @@ export default function Avisos() {
         criado_por: user?.id,
       });
       if (error) throw error;
+
+      void sendPushNotification({
+        title: titulo,
+        body: conteudo,
+        url: "/avisos",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
