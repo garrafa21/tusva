@@ -211,8 +211,9 @@ export default function Financeiro() {
                 const status = getMonthStatus(mesRef);
                 const config = statusConfig[status];
                 const m = getMonthMensalidade(mesRef);
-                const mesLabel = format(new Date(mesRef + "-01"), "MMM", { locale: ptBR });
-                const anoLabel = format(new Date(mesRef + "-01"), "yyyy");
+                const mesDate = parseYearMonthLocal(mesRef);
+                const mesLabel = format(mesDate, "MMM", { locale: ptBR });
+                const anoLabel = format(mesDate, "yyyy");
                 const isCurrent = mesRef === format(now, "yyyy-MM");
 
                 return (
