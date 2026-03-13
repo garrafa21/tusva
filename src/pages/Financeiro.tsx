@@ -116,7 +116,7 @@ export default function Financeiro() {
     const m = userMensalidades.find((m) => m.mes_referencia === mesRef);
     if (!m) return "nao_gerado";
     if (m.status === "pago") return "pago";
-    if (isBefore(new Date(m.data_vencimento), now)) return "atrasado";
+    if (isBefore(parseDateOnlyLocal(m.data_vencimento), now)) return "atrasado";
     return "pendente";
   };
 
