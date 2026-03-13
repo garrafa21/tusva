@@ -16,13 +16,20 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const LINHAS = [
-  "Caboclos", "Pretos Velhos", "Erês", "Baianos",
-  "Marinheiros", "Boiadeiros", "Ciganos", "Malandragem", "Esquerda",
+  "Caboclo", "Preto Velho", "Erê", "Baiano",
+  "Marinheiro", "Boiadeiro", "Cigano", "Malandro", "Exu",
 ];
 
 const linhaEmoji: Record<string, string> = {
-  "Caboclos": "🪶", "Pretos Velhos": "🕯️", "Erês": "🍭", "Baianos": "🌴",
-  "Marinheiros": "⚓", "Boiadeiros": "🐂", "Ciganos": "🔮", "Malandragem": "🎩", "Esquerda": "🔥",
+  "Caboclo": "🪶",
+  "Preto Velho": "🕯️",
+  "Erê": "🍭",
+  "Baiano": "🌴",
+  "Marinheiro": "⚓",
+  "Boiadeiro": "🐂",
+  "Cigano": "🔮",
+  "Malandro": "🎩",
+  "Exu": "🔥",
 };
 
 type Tab = "estudos" | "entidades";
