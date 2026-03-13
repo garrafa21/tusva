@@ -26,6 +26,16 @@ function getLast12Months() {
   return months;
 }
 
+function parseYearMonthLocal(mesRef: string) {
+  const [year, month] = mesRef.split("-").map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+function parseDateOnlyLocal(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export default function Financeiro() {
   const { user, isAdmin, profile } = useAuth();
   const { toast } = useToast();
