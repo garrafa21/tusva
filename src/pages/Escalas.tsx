@@ -38,7 +38,7 @@ const linhaLabel: Record<string, string> = {
 };
 
 export default function Escalas() {
-  const { isAdmin, user } = useAuth();
+  const { canManageEscalas, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("gira");
@@ -307,7 +307,7 @@ export default function Escalas() {
 
         {/* ========== LIMPEZA POR GIRA ========== */}
         <TabsContent value="gira">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openGira} onOpenChange={setOpenGira}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Nova Escala de Gira</Button>
@@ -369,7 +369,7 @@ export default function Escalas() {
                           </p>
                           {items[0]?.descricao && <p className="text-xs text-muted-foreground">{items[0].descricao}</p>}
                         </div>
-                        {isAdmin && (
+                        {canManageEscalas && (
                           <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
                             onClick={() => { if (confirm("Excluir toda a escala desta gira?")) items.forEach((e) => deleteEscala.mutate(e.id)); }}>
                             <Trash2 className="w-4 h-4" />
@@ -402,7 +402,7 @@ export default function Escalas() {
 
         {/* ========== FIM DE SEMANA ========== */}
         <TabsContent value="fds">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openFds} onOpenChange={setOpenFds}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Nova Escala Fim de Semana</Button>
@@ -451,7 +451,7 @@ export default function Escalas() {
                               <CheckCircle2 className="w-3 h-3" /> Você
                             </span>
                           )}
-                          {isAdmin && (
+                          {canManageEscalas && (
                             <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive"
                               onClick={() => { if (confirm("Excluir?")) deleteEscala.mutate(e.id); }}>
                               <Trash2 className="w-4 h-4" />
@@ -470,7 +470,7 @@ export default function Escalas() {
 
         {/* ========== CAMBONES ========== */}
         <TabsContent value="cambones">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openCambone} onOpenChange={setOpenCambone}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Escalar Cambones</Button>
@@ -548,7 +548,7 @@ export default function Escalas() {
                         <p className="font-display font-semibold text-sm">{gira.titulo}</p>
                         <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
                       </div>
-                      {isAdmin && (
+                      {canManageEscalas && (
                         <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
                           onClick={() => { if (confirm("Excluir cambones desta gira?")) deleteCambone.mutate(eventoId); }}>
                           <Trash2 className="w-4 h-4" />
@@ -578,7 +578,7 @@ export default function Escalas() {
 
         {/* ========== DEMAIS FUNÇÕES ========== */}
         <TabsContent value="funcoes">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openFuncoes} onOpenChange={setOpenFuncoes}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Escalar Funções</Button>
@@ -637,7 +637,7 @@ export default function Escalas() {
                         <p className="font-display font-semibold text-sm">{gira.titulo}</p>
                         <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
                       </div>
-                      {isAdmin && (
+                      {canManageEscalas && (
                         <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive h-7 w-7"
                           onClick={() => { if (confirm("Excluir funções desta gira?")) deleteFuncaoGira.mutate(eventoId); }}>
                           <Trash2 className="w-4 h-4" />

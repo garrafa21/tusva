@@ -411,6 +411,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_server_now: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -425,7 +426,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "membro"
+      app_role: "admin" | "membro" | "escala"
       prioridade_aviso: "normal" | "importante" | "urgente"
       tipo_evento:
         | "gira"
@@ -569,7 +570,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "membro"],
+      app_role: ["admin", "membro", "escala"],
       prioridade_aviso: ["normal", "importante", "urgente"],
       tipo_evento: [
         "gira",

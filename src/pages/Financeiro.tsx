@@ -14,9 +14,8 @@ import { ptBR } from "date-fns/locale";
 const PIX_KEY = "terreirotusva@gmail.com";
 const VALOR_MENSALIDADE = 150;
 
-function getCurrentYearMonths() {
+function getCurrentYearMonths(year: number) {
   const months: string[] = [];
-  const year = new Date().getFullYear();
   for (let month = 1; month <= 12; month++) {
     months.push(`${year}-${String(month).padStart(2, "0")}`);
   }
@@ -58,6 +57,15 @@ export default function Financeiro() {
       return data ?? [];
     },
     enabled: isAdmin,
+  });
+
+  const { data: serverNow } = useQuery({
+    queryKey: ["server-now"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_server_now" as any);
+      if (error) throw error;
+      return data as string;
+    },
   });
 
   const gerarMensalidade = useMutation({
@@ -107,8 +115,9 @@ export default function Financeiro() {
     toast({ title: "Chave PIX copiada!", description: PIX_KEY });
   };
 
-  const now = new Date();
-  const monthsOfYear = getCurrentYearMonths();
+  const now = serverNow ? new Date(serverNow) : new Date();
+  const currentYear = now.getFullYear();
+  const monthsOfYear = getCurrentYearMonths(currentYear);
   const userMensalidades = mensalidades?.filter((m) => m.user_id === user?.id) ?? [];
   const mesAtualRef = format(now, "yyyy-MM");
 
