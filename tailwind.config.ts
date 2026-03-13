@@ -51,6 +51,10 @@ export default {
           DEFAULT: "hsl(var(--gold))",
           foreground: "hsl(var(--gold-foreground))",
         },
+        cambone: {
+          DEFAULT: "hsl(var(--cambone))",
+          foreground: "hsl(var(--cambone-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
