@@ -1,1 +1,13 @@
 project_id = "gecrtavukksebqvlxjdn"
+
+[functions.push-send]
+verify_jwt = false
+
+[functions.push-config]
+verify_jwt = false
+
+[functions.push-subscribe]
+verify_jwt = false
+
+[functions.create-user]
+verify_jwt = false
