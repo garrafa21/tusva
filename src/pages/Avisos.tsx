@@ -113,14 +113,6 @@ export default function Avisos() {
         titulo, conteudo, prioridade, criado_por: user?.id,
       });
       if (error) throw error;
-
-      // Send browser notification to all users with permission
-      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification(`Novo aviso ${prioridade === "urgente" ? "URGENTE" : prioridade === "importante" ? "IMPORTANTE" : ""}`, {
-          body: titulo,
-          icon: "/logo-tusva.jpg",
-        });
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
