@@ -38,7 +38,7 @@ const linhaLabel: Record<string, string> = {
 };
 
 export default function Escalas() {
-  const { isAdmin, user } = useAuth();
+  const { canManageEscalas, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("gira");
