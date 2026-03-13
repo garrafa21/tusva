@@ -177,12 +177,19 @@ export default function Estudos() {
     );
   }
 
-  // ---- Entidades grouped ----
-  const grouped = LINHAS.reduce((acc, cat) => {
-    const items = entidades?.filter((e) => e.categoria === cat) ?? [];
-    if (items.length > 0) acc[cat] = items;
+  // ---- Entidades grouped: médium > linha > entidade ----
+  const getNomeMembro = (userId: string) => {
+    const m = membros?.find((p) => p.user_id === userId);
+    return m?.nome_espiritual || m?.nome || "Filho";
+  };
+
+  const entidadesPorMedium = (entidades ?? []).reduce<Record<string, any[]>>((acc, e) => {
+    const mediumId = (e as any).medium_user_id as string | null;
+    if (!mediumId) return acc;
+    if (!acc[mediumId]) acc[mediumId] = [];
+    acc[mediumId].push(e as any);
     return acc;
-  }, {} as Record<string, typeof entidades>);
+  }, {});
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
