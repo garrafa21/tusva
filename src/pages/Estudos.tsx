@@ -10,18 +10,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Plus, ArrowLeft, Sparkles, Trash2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { BookOpen, Plus, ArrowLeft, Trash2, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const LINHAS = [
-  "Caboclos", "Pretos Velhos", "Erês", "Baianos",
-  "Marinheiros", "Boiadeiros", "Ciganos", "Malandragem", "Esquerda",
+  "Caboclo", "Preto Velho", "Erê", "Baiano",
+  "Marinheiro", "Boiadeiro", "Cigano", "Malandro", "Exu",
 ];
 
 const linhaEmoji: Record<string, string> = {
-  "Caboclos": "🪶", "Pretos Velhos": "🕯️", "Erês": "🍭", "Baianos": "🌴",
-  "Marinheiros": "⚓", "Boiadeiros": "🐂", "Ciganos": "🔮", "Malandragem": "🎩", "Esquerda": "🔥",
+  "Caboclo": "🪶",
+  "Preto Velho": "🕯️",
+  "Erê": "🍭",
+  "Baiano": "🌴",
+  "Marinheiro": "⚓",
+  "Boiadeiro": "🐂",
+  "Cigano": "🔮",
+  "Malandro": "🎩",
+  "Exu": "🔥",
 };
 
 type Tab = "estudos" | "entidades";
@@ -59,7 +67,12 @@ export default function Estudos() {
   const { data: entidades, isLoading: loadingEntidades } = useQuery({
     queryKey: ["entidades"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("entidades").select("*").order("categoria").order("nome");
+      const { data, error } = await supabase
+        .from("entidades")
+        .select("*")
+        .order("medium_user_id", { ascending: true })
+        .order("categoria", { ascending: true })
+        .order("nome", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -110,11 +123,16 @@ export default function Estudos() {
 
   const createEntidade = useMutation({
     mutationFn: async (form: FormData) => {
-      const { error } = await supabase.from("entidades").insert({
+      const mediumUserId = form.get("medium_user_id") as string;
+      const payload = {
+        medium_user_id: mediumUserId,
         nome: form.get("nome") as string,
         categoria: form.get("categoria") as string,
+        como_trabalha: (form.get("como_trabalha") as string) || null,
+        elementos: (form.get("elementos") as string) || null,
         descricao: (form.get("descricao") as string) || null,
-      });
+      } as any;
+      const { error } = await supabase.from("entidades").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["entidades"] }); setOpenEntidade(false); toast({ title: "Entidade adicionada!" }); },
@@ -159,12 +177,19 @@ export default function Estudos() {
     );
   }
 
-  // ---- Entidades grouped ----
-  const grouped = LINHAS.reduce((acc, cat) => {
-    const items = entidades?.filter((e) => e.categoria === cat) ?? [];
-    if (items.length > 0) acc[cat] = items;
+  // ---- Entidades grouped: médium > linha > entidade ----
+  const getNomeMembro = (userId: string) => {
+    const m = membros?.find((p) => p.user_id === userId);
+    return m?.nome_espiritual || m?.nome || "Filho";
+  };
+
+  const entidadesPorMedium = (entidades ?? []).reduce<Record<string, any[]>>((acc, e) => {
+    const mediumId = (e as any).medium_user_id as string | null;
+    if (!mediumId) return acc;
+    if (!acc[mediumId]) acc[mediumId] = [];
+    acc[mediumId].push(e as any);
     return acc;
-  }, {} as Record<string, typeof entidades>);
+  }, {});
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
@@ -283,19 +308,31 @@ export default function Estudos() {
                 <DialogTrigger asChild>
                   <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nova Entidade</Button>
                 </DialogTrigger>
-                <DialogContent className="bg-card border-border">
-                  <DialogHeader><DialogTitle className="font-display">Nova Entidade</DialogTitle></DialogHeader>
+                <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Cadastrar Entidade de Médium</DialogTitle></DialogHeader>
                   <form onSubmit={(e) => { e.preventDefault(); createEntidade.mutate(new FormData(e.currentTarget)); }} className="space-y-3">
-                    <div><Label>Nome</Label><Input name="nome" required className="bg-secondary" placeholder="Ex: Caboclo Ventania" /></div>
-                    <div><Label>Linha</Label>
-                      <Select name="categoria" defaultValue="Caboclos">
+                    <div>
+                      <Label>Médium</Label>
+                      <Select name="medium_user_id" required>
+                        <SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione o filho médium" /></SelectTrigger>
+                        <SelectContent>
+                          {membros?.map((m) => <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Linha</Label>
+                      <Select name="categoria" defaultValue="Caboclo">
                         <SelectTrigger className="bg-secondary"><SelectValue /></SelectTrigger>
                         <SelectContent>{LINHAS.map((c) => <SelectItem key={c} value={c}>{linhaEmoji[c]} {c}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    <div><Label>Fundamentos / Descrição (opcional)</Label><Textarea name="descricao" className="bg-secondary" rows={4} placeholder="Fundamentos, história, características..." /></div>
+                    <div><Label>Nome da entidade</Label><Input name="nome" required className="bg-secondary" placeholder="Ex: Exu Capa Preta" /></div>
+                    <div><Label>Como trabalha</Label><Textarea name="como_trabalha" className="bg-secondary" rows={2} placeholder="Forma de trabalho da entidade" /></div>
+                    <div><Label>Elementos</Label><Input name="elementos" className="bg-secondary" placeholder="Ex: marafo, charuto, pemba..." /></div>
+                    <div><Label>Detalhes adicionais</Label><Textarea name="descricao" className="bg-secondary" rows={3} placeholder="Observações e fundamentos" /></div>
                     <Button type="submit" className="w-full" disabled={createEntidade.isPending}>
-                      {createEntidade.isPending ? "Adicionando..." : "Adicionar"}
+                      {createEntidade.isPending ? "Salvando..." : "Salvar"}
                     </Button>
                   </form>
                 </DialogContent>
@@ -306,38 +343,55 @@ export default function Estudos() {
           {loadingEntidades ? (
             <div className="flex justify-center py-8"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(grouped).map(([categoria, items]) => (
-                <div key={categoria}>
-                  <h2 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
-                    <span>{linhaEmoji[categoria]}</span> {categoria}
-                    <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">{items!.length}</span>
-                  </h2>
-                  <div className="grid gap-2">
-                    {items!.map((e) => (
-                      <Card key={e.id} className="bg-card border-border">
-                        <CardContent className="p-3 flex items-start justify-between">
-                          <div>
-                            <p className="font-medium text-sm">{e.nome}</p>
-                            {e.descricao && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{e.descricao}</p>}
-                          </div>
-                          {isAdmin && (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="shrink-0 text-muted-foreground hover:text-destructive"
-                              onClick={() => { if (confirm("Excluir esta entidade?")) deleteEntidade.mutate(e.id); }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+            <div className="space-y-3">
+              {Object.entries(entidadesPorMedium).map(([mediumId, items]) => (
+                <Collapsible key={mediumId} className="border border-border rounded-lg bg-card">
+                  <CollapsibleTrigger className="w-full p-3 flex items-center justify-between text-left">
+                    <span className="font-medium text-sm">{getNomeMembro(mediumId)}</span>
+                    <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {items.length} entidade(s)
+                      <ChevronDown className="w-4 h-4" />
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-3 pb-3 space-y-2">
+                    {LINHAS.map((linha) => {
+                      const itensLinha = items.filter((e) => e.categoria === linha);
+                      if (itensLinha.length === 0) return null;
+                      return (
+                        <Collapsible key={`${mediumId}-${linha}`} className="rounded-md border border-border/60">
+                          <CollapsibleTrigger className="w-full p-2 flex items-center justify-between text-sm">
+                            <span>{linhaEmoji[linha]} {linha}</span>
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="px-2 pb-2 space-y-2">
+                            {itensLinha.map((ent) => (
+                              <Collapsible key={ent.id} className="rounded-md bg-secondary/40">
+                                <CollapsibleTrigger className="w-full p-2 flex items-center justify-between text-sm font-medium">
+                                  {ent.nome}
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="px-3 pb-3 space-y-1 text-xs text-muted-foreground">
+                                  {(ent as any).como_trabalha && <p><span className="text-foreground font-medium">Como trabalha:</span> {(ent as any).como_trabalha}</p>}
+                                  {(ent as any).elementos && <p><span className="text-foreground font-medium">Elementos:</span> {(ent as any).elementos}</p>}
+                                  {ent.descricao && <p><span className="text-foreground font-medium">Detalhes:</span> {ent.descricao}</p>}
+                                  {isAdmin && (
+                                    <div className="pt-1">
+                                      <Button size="sm" variant="ghost" className="text-destructive h-7 px-2" onClick={() => { if (confirm("Excluir esta entidade?")) deleteEntidade.mutate(ent.id); }}>
+                                        <Trash2 className="w-3 h-3 mr-1" /> Excluir
+                                      </Button>
+                                    </div>
+                                  )}
+                                </CollapsibleContent>
+                              </Collapsible>
+                            ))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      );
+                    })}
+                  </CollapsibleContent>
+                </Collapsible>
               ))}
-              {Object.keys(grouped).length === 0 && (
+              {Object.keys(entidadesPorMedium).length === 0 && (
                 <p className="text-center text-muted-foreground py-8">Nenhuma entidade cadastrada</p>
               )}
             </div>

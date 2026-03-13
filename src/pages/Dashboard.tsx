@@ -1,24 +1,47 @@
+import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign } from "lucide-react";
+import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign, Users, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
 
 const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", caboclos: "🪶 Caboclos", pretos_velhos: "🕯️ Pretos Velhos", eres: "🍭 Erês", baianos: "🌴 Baianos", marinheiros: "⚓ Marinheiros", boiadeiros: "🐂 Boiadeiros", ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda", outro: "Evento" };
 
+const demaisFuncoesLabel: Record<string, string> = {
+  porteira: "Porteira",
+  senha_chamar: "Senha (Chamar Consulente)",
+  senha_direcionar: "Senha (Direcionar Consulente)",
+  apoio_conga: "Apoio Congá",
+};
+
+function toLocalDateString(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function startOfLocalDayIso() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
 export default function Dashboard() {
   const { profile, isAdmin, user } = useAuth();
+  const todayLocal = toLocalDateString(new Date());
+  const todayStartIso = startOfLocalDayIso();
 
   const { data: proximoEvento } = useQuery({
-    queryKey: ["proximo-evento"],
+    queryKey: ["proximo-evento", todayStartIso],
     queryFn: async () => {
       const { data } = await supabase
         .from("eventos")
         .select("*")
-        .gte("data_inicio", new Date().toISOString())
+        .gte("data_inicio", todayStartIso)
         .order("data_inicio", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -27,21 +50,21 @@ export default function Dashboard() {
   });
 
   const { data: avisosNaoLidos } = useQuery({
-    queryKey: ["avisos-nao-lidos"],
+    queryKey: ["avisos-nao-lidos", user?.id],
     queryFn: async () => {
       const { data } = await supabase.from("avisos").select("*").order("created_at", { ascending: false }).limit(3);
       return data?.filter((a) => !a.lido_por.includes(user?.id ?? "")) ?? [];
     },
+    enabled: !!user,
   });
 
-  // Fetch ALL escalas for this user (not just admin)
   const { data: minhaEscala } = useQuery({
-    queryKey: ["minha-escala", user?.id],
+    queryKey: ["minha-escala", user?.id, todayLocal],
     queryFn: async () => {
       const { data } = await supabase
         .from("escalas_limpeza")
         .select("*")
-        .gte("data", new Date().toISOString().split("T")[0])
+        .gte("data", todayLocal)
         .order("data", { ascending: true });
       return data?.find((e) => e.responsaveis.includes(user?.id ?? "")) ?? null;
     },
@@ -56,9 +79,78 @@ export default function Dashboard() {
     },
   });
 
+  const { data: girasAbertas } = useQuery({
+    queryKey: ["giras-dashboard-avisos", todayStartIso],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("eventos")
+        .select("*")
+        .in("tipo", ["gira", "desenvolvimento"])
+        .gte("data_inicio", todayStartIso)
+        .order("data_inicio", { ascending: true });
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const { data: meusCambones } = useQuery({
+    queryKey: ["dashboard-meus-cambones", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("cambones").select("*").eq("cambone_user_id", user!.id);
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const { data: minhasFuncoes } = useQuery({
+    queryKey: ["dashboard-minhas-funcoes", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("funcoes_gira").select("*").eq("user_id", user!.id);
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const getNome = (userId: string) => {
+    const m = membros?.find((p) => p.user_id === userId);
+    return m?.nome_espiritual || m?.nome?.split(" ")[0] || "Médium";
+  };
+
+  const avisosAtribuicoes = useMemo(() => {
+    if (!user || !girasAbertas) return [] as { id: string; text: string; when: Date; kind: "cambone" | "funcao" }[];
+
+    const byEvento = new Map(girasAbertas.map((g) => [g.id, g]));
+    const cards: { id: string; text: string; when: Date; kind: "cambone" | "funcao" }[] = [];
+
+    for (const c of meusCambones ?? []) {
+      const evento = byEvento.get(c.evento_id);
+      if (!evento) continue;
+      cards.push({
+        id: `c-${c.id}`,
+        text: `Você irá cambonar ${getNome(c.medium_user_id)}`,
+        when: new Date(evento.data_inicio),
+        kind: "cambone",
+      });
+    }
+
+    for (const f of minhasFuncoes ?? []) {
+      const evento = byEvento.get(f.evento_id);
+      if (!evento) continue;
+      cards.push({
+        id: `f-${f.id}`,
+        text: `Você está escalado em ${demaisFuncoesLabel[f.funcao] ?? f.funcao}`,
+        when: new Date(evento.data_inicio),
+        kind: "funcao",
+      });
+    }
+
+    return cards.sort((a, b) => a.when.getTime() - b.when.getTime());
+  }, [user, girasAbertas, meusCambones, minhasFuncoes, membros]);
+
+  const totalAvisosDashboard = (avisosNaoLidos?.length ?? 0) + avisosAtribuicoes.length;
+
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
-      {/* Greeting */}
       <div className="flex items-center gap-3 mb-6">
         <img src="/logo-tusva.jpg" alt="TUSVA" className="w-12 h-12 rounded-full object-cover shadow-md shadow-primary/20" loading="eager" />
         <div>
@@ -72,7 +164,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Próximo evento */}
       <Link to="/calendario">
         <Card className="bg-card border-border hover:border-primary/40 transition-colors">
           <CardHeader className="pb-2">
@@ -101,21 +192,34 @@ export default function Dashboard() {
         </Card>
       </Link>
 
-      {/* Avisos */}
       <Link to="/avisos">
         <Card className="bg-card border-border hover:border-gold/40 transition-colors mt-4">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Bell className="w-4 h-4 text-gold" />
               Avisos
-              {(avisosNaoLidos?.length ?? 0) > 0 && (
+              {totalAvisosDashboard > 0 && (
                 <span className="ml-auto text-xs bg-gold text-gold-foreground px-2 py-0.5 rounded-full font-bold">
-                  {avisosNaoLidos?.length} novo(s)
+                  {totalAvisosDashboard} novo(s)
                 </span>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {avisosAtribuicoes.length > 0 && (
+              <div className="space-y-2 mb-2">
+                {avisosAtribuicoes.slice(0, 3).map((item) => (
+                  <div key={item.id} className="flex items-start gap-2">
+                    {item.kind === "cambone" ? <Users className="w-4 h-4 text-primary mt-0.5 shrink-0" /> : <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />}
+                    <div>
+                      <p className="text-sm font-medium">{item.text}</p>
+                      <p className="text-xs text-muted-foreground">{format(item.when, "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {avisosNaoLidos && avisosNaoLidos.length > 0 ? (
               <div className="space-y-2">
                 {avisosNaoLidos.map((a) => (
@@ -129,14 +233,13 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : avisosAtribuicoes.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum aviso novo</p>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       </Link>
 
-      {/* Escala - shows for ALL users */}
       <Link to="/escalas">
         <Card className="bg-card border-border hover:border-primary/40 transition-colors mt-4">
           <CardHeader className="pb-2">
@@ -159,7 +262,6 @@ export default function Dashboard() {
         </Card>
       </Link>
 
-      {/* Quick links */}
       <div className="grid grid-cols-2 gap-3 mt-4">
         <Link to="/estudos" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
           <BookOpen className="w-5 h-5 text-primary" />

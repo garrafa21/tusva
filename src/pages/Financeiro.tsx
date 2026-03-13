@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, CheckCircle, AlertTriangle, Clock, Copy, CalendarDays } from "lucide-react";
-import { format, isBefore, subMonths, addMonths } from "date-fns";
+import { format, isBefore, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const PIX_KEY = "terreirotusva@gmail.com";
@@ -24,6 +24,16 @@ function getLast12Months() {
     months.push(format(d, "yyyy-MM"));
   }
   return months;
+}
+
+function parseYearMonthLocal(mesRef: string) {
+  const [year, month] = mesRef.split("-").map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+function parseDateOnlyLocal(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 export default function Financeiro() {
@@ -106,7 +116,7 @@ export default function Financeiro() {
     const m = userMensalidades.find((m) => m.mes_referencia === mesRef);
     if (!m) return "nao_gerado";
     if (m.status === "pago") return "pago";
-    if (isBefore(new Date(m.data_vencimento), now)) return "atrasado";
+    if (isBefore(parseDateOnlyLocal(m.data_vencimento), now)) return "atrasado";
     return "pendente";
   };
 
@@ -201,8 +211,9 @@ export default function Financeiro() {
                 const status = getMonthStatus(mesRef);
                 const config = statusConfig[status];
                 const m = getMonthMensalidade(mesRef);
-                const mesLabel = format(new Date(mesRef + "-01"), "MMM", { locale: ptBR });
-                const anoLabel = format(new Date(mesRef + "-01"), "yyyy");
+                const mesDate = parseYearMonthLocal(mesRef);
+                const mesLabel = format(mesDate, "MMM", { locale: ptBR });
+                const anoLabel = format(mesDate, "yyyy");
                 const isCurrent = mesRef === format(now, "yyyy-MM");
 
                 return (
@@ -250,7 +261,7 @@ export default function Financeiro() {
           {profiles?.map((p) => {
             const mesAtual = format(now, "yyyy-MM");
             const m = mensalidades?.find((m) => m.user_id === p.user_id && m.mes_referencia === mesAtual);
-            const status = m ? (m.status === "pago" ? "pago" : (isBefore(new Date(m.data_vencimento), now) ? "atrasado" : "pendente")) : "nao_gerado";
+            const status = m ? (m.status === "pago" ? "pago" : (isBefore(parseDateOnlyLocal(m.data_vencimento), now) ? "atrasado" : "pendente")) : "nao_gerado";
             const config = statusConfig[status];
 
             return (
@@ -261,7 +272,7 @@ export default function Financeiro() {
                       <div className={`w-3 h-3 rounded-full ${config.bg}`} />
                       <div>
                         <p className="text-sm font-medium">{p.nome}</p>
-                        {m && <p className="text-xs text-muted-foreground">Vence dia {format(new Date(m.data_vencimento), "dd/MM")}</p>}
+                        {m && <p className="text-xs text-muted-foreground">Vence dia {format(parseDateOnlyLocal(m.data_vencimento), "dd/MM")}</p>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

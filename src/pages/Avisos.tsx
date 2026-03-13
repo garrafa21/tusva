@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Bell, Plus, AlertTriangle, Star, Check, Trash2, Users, Shield, Sparkles } from "lucide-react";
 import { format, isToday, isTomorrow } from "date-fns";
@@ -32,6 +32,12 @@ const funcoesLimpezaLabel: Record<string, string> = {
   conga: "🕯️ Congá", salao: "🏠 Salão", escada: "🪜 Escada", lixos: "🗑️ Lixos",
 };
 
+function startOfLocalDayIso() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
 export default function Avisos() {
   const { isAdmin, user } = useAuth();
   const { toast } = useToast();
@@ -47,20 +53,16 @@ export default function Avisos() {
     },
   });
 
-  // Get upcoming giras for today/tomorrow to show personal assignments
+  // Show assignments until the gira day passes (remove only on next day)
   const { data: proximasGiras } = useQuery({
     queryKey: ["proximas-giras-avisos"],
     queryFn: async () => {
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 2);
       const { data } = await supabase
         .from("eventos")
         .select("*")
         .in("tipo", ["gira", "desenvolvimento"])
-        .gte("data_inicio", now.toISOString())
-        .lte("data_inicio", tomorrow.toISOString())
-        .order("data_inicio");
+        .gte("data_inicio", startOfLocalDayIso())
+        .order("data_inicio", { ascending: true });
       return data ?? [];
     },
   });
@@ -111,14 +113,6 @@ export default function Avisos() {
         titulo, conteudo, prioridade, criado_por: user?.id,
       });
       if (error) throw error;
-
-      // Send browser notification to all users with permission
-      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification(`Novo aviso ${prioridade === "urgente" ? "URGENTE" : prioridade === "importante" ? "IMPORTANTE" : ""}`, {
-          body: titulo,
-          icon: "/logo-tusva.jpg",
-        });
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
@@ -195,18 +189,15 @@ export default function Avisos() {
     const minhas = minhasEscalas.filter((e) => e.responsaveis.includes(user.id));
     for (const escala of minhas) {
       const escalaDate = new Date(escala.data + "T00:00:00");
-      const diffDays = Math.ceil((escalaDate.getTime() - new Date().setHours(0,0,0,0)) / (1000*60*60*24));
-      if (diffDays <= 7) {
-        const funcaoStr = (escala as any).funcao ? (funcoesLimpezaLabel[(escala as any).funcao] || (escala as any).funcao) : "Limpeza geral";
-        const tipoStr = (escala as any).tipo_escala === "gira" ? "Limpeza pós-gira" : "Limpeza fim de semana";
-        personalCards.push({
-          tipo: "limpeza",
-          texto: `${tipoStr}: ${funcaoStr}`,
-          giraTitle: escala.descricao || "",
-          giraDate: escalaDate,
-          icon: "limpeza",
-        });
-      }
+      const funcaoStr = (escala as any).funcao ? (funcoesLimpezaLabel[(escala as any).funcao] || (escala as any).funcao) : "Limpeza geral";
+      const tipoStr = (escala as any).tipo_escala === "gira" ? "Limpeza pós-gira" : "Limpeza fim de semana";
+      personalCards.push({
+        tipo: "limpeza",
+        texto: `${tipoStr}: ${funcaoStr}`,
+        giraTitle: escala.descricao || "",
+        giraDate: escalaDate,
+        icon: "limpeza",
+      });
     }
   }
 
@@ -220,7 +211,10 @@ export default function Avisos() {
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Novo</Button></DialogTrigger>
             <DialogContent className="bg-card border-border">
-              <DialogHeader><DialogTitle className="font-display">Novo Aviso</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle className="font-display">Novo Aviso</DialogTitle>
+                <DialogDescription className="text-muted-foreground">Envie um aviso para todos os filhos do terreiro.</DialogDescription>
+              </DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); createAviso.mutate(new FormData(e.currentTarget)); }} className="space-y-3">
                 <div><Label>Título</Label><Input name="titulo" required className="bg-secondary" /></div>
                 <div><Label>Conteúdo</Label><Textarea name="conteudo" required className="bg-secondary" rows={4} /></div>
