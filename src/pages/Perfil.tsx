@@ -29,7 +29,6 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
 export default function Perfil() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(profile?.nome ?? "");
   const [loading, setLoading] = useState(false);
