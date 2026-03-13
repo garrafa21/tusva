@@ -87,6 +87,10 @@ export default function Calendario() {
       const tz = getTimezoneOffsetStr();
       const dataInicio = `${dataStr}T${hora}:00${tz}`;
 
+      if ((selectedTipo === "gira" || selectedTipo === "desenvolvimento") && !selectedLinha) {
+        throw new Error("Selecione a linha espiritual para a gira");
+      }
+
       const { error } = await supabase.from("eventos").insert({
         titulo: form.get("titulo") as string,
         descricao: (form.get("descricao") as string) || null,

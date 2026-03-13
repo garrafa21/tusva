@@ -106,11 +106,18 @@ export default function Avisos() {
 
   const createAviso = useMutation({
     mutationFn: async (form: FormData) => {
-      const titulo = form.get("titulo") as string;
-      const conteudo = form.get("conteudo") as string;
+      const titulo = ((form.get("titulo") as string) || "").trim();
+      const conteudo = ((form.get("conteudo") as string) || "").trim();
       const prioridade = form.get("prioridade") as "normal" | "importante" | "urgente";
+
+      if (titulo.length > 50) throw new Error("Título pode ter no máximo 50 caracteres");
+      if (conteudo.length > 120) throw new Error("Conteúdo pode ter no máximo 120 caracteres");
+
       const { error } = await supabase.from("avisos").insert({
-        titulo, conteudo, prioridade, criado_por: user?.id,
+        titulo,
+        conteudo,
+        prioridade,
+        criado_por: user?.id,
       });
       if (error) throw error;
     },
@@ -137,15 +144,15 @@ export default function Avisos() {
   });
 
   const marcarComoLido = useMutation({
-    mutationFn: async (aviso: any) => {
-      const newLidoPor = [...(aviso.lido_por || []), user?.id];
-      const { error } = await supabase.from("avisos").update({ lido_por: newLidoPor }).eq("id", aviso.id);
+    mutationFn: async (avisoId: string) => {
+      const { error } = await supabase.rpc("mark_aviso_lido" as any, { _aviso_id: avisoId } as any);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
       queryClient.invalidateQueries({ queryKey: ["avisos-nao-lidos"] });
     },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
   const getNome = (id: string) => {
@@ -216,8 +223,14 @@ export default function Avisos() {
                 <DialogDescription className="text-muted-foreground">Envie um aviso para todos os filhos do terreiro.</DialogDescription>
               </DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); createAviso.mutate(new FormData(e.currentTarget)); }} className="space-y-3">
-                <div><Label>Título</Label><Input name="titulo" required className="bg-secondary" /></div>
-                <div><Label>Conteúdo</Label><Textarea name="conteudo" required className="bg-secondary" rows={4} /></div>
+                <div>
+                  <Label>Título</Label>
+                  <Input name="titulo" required maxLength={50} className="bg-secondary" placeholder="Máximo 50 caracteres" />
+                </div>
+                <div>
+                  <Label>Conteúdo</Label>
+                  <Textarea name="conteudo" required maxLength={120} className="bg-secondary" rows={4} placeholder="Máximo 120 caracteres" />
+                </div>
                 <div><Label>Prioridade</Label>
                   <Select name="prioridade" defaultValue="normal">
                     <SelectTrigger className="bg-secondary"><SelectValue /></SelectTrigger>
@@ -284,7 +297,7 @@ export default function Avisos() {
                     <div className="flex items-center gap-1 shrink-0 ml-2">
                       {!lido ? (
                         <Button size="sm" variant="ghost" className="text-xs gap-1 h-7 text-primary"
-                          onClick={() => marcarComoLido.mutate(a)}>
+                          onClick={() => marcarComoLido.mutate(a.id)}>
                           <Check className="w-3 h-3" /> Lido
                         </Button>
                       ) : (

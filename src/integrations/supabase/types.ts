@@ -418,6 +418,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_aviso_lido: { Args: { _aviso_id: string }; Returns: undefined }
+      set_mensalidade_status: {
+        Args: { _mensalidade_id: string; _status: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "membro"

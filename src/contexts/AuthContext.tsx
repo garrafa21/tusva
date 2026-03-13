@@ -37,6 +37,18 @@ const limpezaLabel: Record<string, string> = {
   lixos: "Lixos",
 };
 
+const linhaEspiritualLabel: Record<string, string> = {
+  caboclos: "Caboclos",
+  pretos_velhos: "Pretos Velhos",
+  eres: "Erês",
+  baianos: "Baianos",
+  marinheiros: "Marinheiros",
+  boiadeiros: "Boiadeiros",
+  ciganos: "Ciganos",
+  malandragem: "Malandragem",
+  esquerda: "Esquerda",
+};
+
 async function showSystemNotification(title: string, body: string) {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
 
@@ -121,8 +133,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "eventos" },
         (payload) => {
-          const evento = payload.new as { titulo?: string; tipo?: string };
-          void showSystemNotification("Novo evento cadastrado", `${evento.titulo ?? "Evento"} (${evento.tipo ?? "evento"})`);
+          const evento = payload.new as { titulo?: string; tipo?: string; linha?: string };
+          const linha = evento.linha ? (linhaEspiritualLabel[evento.linha] ?? evento.linha) : evento.titulo ?? "Linha";
+          const isGira = evento.tipo === "gira" || evento.tipo === "desenvolvimento";
+
+          if (isGira) {
+            void showSystemNotification(`GIRA DE ${String(linha).toUpperCase()}`, "CONFIRME SUA PRESENÇA!");
+            return;
+          }
+
+          void showSystemNotification("Novo evento cadastrado", evento.titulo ?? "Confira o calendário");
         }
       )
       .on(
