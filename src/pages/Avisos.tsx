@@ -88,10 +88,11 @@ export default function Avisos() {
   const { data: minhasEscalas } = useQuery({
     queryKey: ["minhas-escalas-avisos"],
     queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
       const { data } = await supabase
         .from("escalas_limpeza")
         .select("*")
-        .gte("data", new Date().toISOString().split("T")[0])
+        .gte("data", today)
         .order("data", { ascending: true });
       return data ?? [];
     },
