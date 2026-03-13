@@ -43,7 +43,7 @@ serve(async (req) => {
       }
     }
 
-    const { nome, senha, isAdmin: makeAdmin } = await req.json();
+    const { nome, senha, isAdmin: makeAdmin, role } = await req.json();
     const trimmedName = String(nome ?? "").trim();
     const normalizedName = trimmedName.toLowerCase();
     const email = normalizedName.replace(/\s+/g, ".") + "@tusva.app";
@@ -63,17 +63,20 @@ serve(async (req) => {
       });
     }
 
+    const normalizedRole = role === "admin" || role === "escala" ? role : "membro";
     const rolesToAssign = new Set<string>(["membro"]);
-    if (makeAdmin || SPECIAL_ADMINS.has(normalizedName)) {
+
+    if (normalizedRole === "admin" || makeAdmin || SPECIAL_ADMINS.has(normalizedName)) {
       rolesToAssign.add("admin");
     }
-    if (SPECIAL_ESCALA.has(normalizedName)) {
+
+    if (normalizedRole === "escala" || SPECIAL_ESCALA.has(normalizedName)) {
       rolesToAssign.add("escala");
     }
 
-    const roleRows = Array.from(rolesToAssign).map((role) => ({
+    const roleRows = Array.from(rolesToAssign).map((assignedRole) => ({
       user_id: data.user.id,
-      role,
+      role: assignedRole,
     }));
 
     const { error: rolesError } = await supabaseAdmin.from("user_roles").insert(roleRows);
