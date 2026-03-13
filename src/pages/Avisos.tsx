@@ -32,6 +32,12 @@ const funcoesLimpezaLabel: Record<string, string> = {
   conga: "🕯️ Congá", salao: "🏠 Salão", escada: "🪜 Escada", lixos: "🗑️ Lixos",
 };
 
+function startOfLocalDayIso() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
 export default function Avisos() {
   const { isAdmin, user } = useAuth();
   const { toast } = useToast();
