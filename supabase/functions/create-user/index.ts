@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,79 +15,94 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 
     // Verify caller is admin
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
+    if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
-      const {
-        data: { user: caller },
-      } = await supabaseAdmin.auth.getUser(token);
-      if (caller) {
-        const { data: role } = await supabaseAdmin
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", caller.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        if (!role) {
-          return new Response(JSON.stringify({ error: "Não autorizado" }), {
-            status: 403,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+
+      const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+      const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims?.sub) {
+        return new Response(JSON.stringify({ error: "Não autenticado" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-    }
 
-    const { nome, senha, isAdmin: makeAdmin, role } = await req.json();
-    const trimmedName = String(nome ?? "").trim();
-    const normalizedName = trimmedName.toLowerCase();
-    const email = normalizedName.replace(/\s+/g, ".") + "@tusva.app";
+      const callerId = claimsData.claims.sub as string;
 
-    // Create user with admin API (won't affect current session)
-    const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: senha,
-      email_confirm: true,
-      user_metadata: { nome: trimmedName },
-    });
+      const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 400,
+      const { data: role } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", callerId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!role) {
+        return new Response(JSON.stringify({ error: "Não autorizado" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Proceed with admin client
+      const { nome, senha, isAdmin: makeAdmin, role: requestedRole } = await req.json();
+      const trimmedName = String(nome ?? "").trim();
+      const normalizedName = trimmedName.toLowerCase();
+      const email = normalizedName.replace(/\s+/g, ".") + "@tusva.app";
+
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: senha,
+        email_confirm: true,
+        user_metadata: { nome: trimmedName },
+      });
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const normalizedRole = requestedRole === "admin" || requestedRole === "escala" ? requestedRole : "membro";
+      const rolesToAssign = new Set<string>(["membro"]);
+
+      if (normalizedRole === "admin" || makeAdmin || SPECIAL_ADMINS.has(normalizedName)) {
+        rolesToAssign.add("admin");
+      }
+
+      if (normalizedRole === "escala" || SPECIAL_ESCALA.has(normalizedName)) {
+        rolesToAssign.add("escala");
+      }
+
+      const roleRows = Array.from(rolesToAssign).map((assignedRole) => ({
+        user_id: data.user.id,
+        role: assignedRole,
+      }));
+
+      const { error: rolesError } = await supabaseAdmin.from("user_roles").insert(roleRows);
+      if (rolesError) {
+        return new Response(JSON.stringify({ error: rolesError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, user_id: data.user.id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const normalizedRole = role === "admin" || role === "escala" ? role : "membro";
-    const rolesToAssign = new Set<string>(["membro"]);
-
-    if (normalizedRole === "admin" || makeAdmin || SPECIAL_ADMINS.has(normalizedName)) {
-      rolesToAssign.add("admin");
-    }
-
-    if (normalizedRole === "escala" || SPECIAL_ESCALA.has(normalizedName)) {
-      rolesToAssign.add("escala");
-    }
-
-    const roleRows = Array.from(rolesToAssign).map((assignedRole) => ({
-      user_id: data.user.id,
-      role: assignedRole,
-    }));
-
-    const { error: rolesError } = await supabaseAdmin.from("user_roles").insert(roleRows);
-    if (rolesError) {
-      return new Response(JSON.stringify({ error: rolesError.message }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ success: true, user_id: data.user.id }), {
+    return new Response(JSON.stringify({ error: "Não autenticado" }), {
+      status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
