@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, ClipboardList, Bell, BookOpen, Home, Users, LogOut, User, Settings, Moon, Sun, Sparkles, DollarSign } from "lucide-react";
+import { Calendar, ClipboardList, Bell, BookOpen, Home, Users, LogOut, User, Settings, Moon, Sun, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
 

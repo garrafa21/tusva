@@ -308,7 +308,21 @@ export type Database = {
     Enums: {
       app_role: "admin" | "membro"
       prioridade_aviso: "normal" | "importante" | "urgente"
-      tipo_evento: "gira" | "festa" | "reuniao" | "outro" | "desenvolvimento"
+      tipo_evento:
+        | "gira"
+        | "festa"
+        | "reuniao"
+        | "outro"
+        | "desenvolvimento"
+        | "caboclos"
+        | "pretos_velhos"
+        | "eres"
+        | "baianos"
+        | "marinheiros"
+        | "boiadeiros"
+        | "ciganos"
+        | "malandragem"
+        | "esquerda"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -438,7 +452,22 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "membro"],
       prioridade_aviso: ["normal", "importante", "urgente"],
-      tipo_evento: ["gira", "festa", "reuniao", "outro", "desenvolvimento"],
+      tipo_evento: [
+        "gira",
+        "festa",
+        "reuniao",
+        "outro",
+        "desenvolvimento",
+        "caboclos",
+        "pretos_velhos",
+        "eres",
+        "baianos",
+        "marinheiros",
+        "boiadeiros",
+        "ciganos",
+        "malandragem",
+        "esquerda",
+      ],
     },
   },
 } as const
