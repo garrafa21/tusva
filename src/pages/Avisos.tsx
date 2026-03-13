@@ -297,7 +297,7 @@ export default function Avisos() {
                     <div className="flex items-center gap-1 shrink-0 ml-2">
                       {!lido ? (
                         <Button size="sm" variant="ghost" className="text-xs gap-1 h-7 text-primary"
-                          onClick={() => marcarComoLido.mutate(a)}>
+                          onClick={() => marcarComoLido.mutate(a.id)}>
                           <Check className="w-3 h-3" /> Lido
                         </Button>
                       ) : (
