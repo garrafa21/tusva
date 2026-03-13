@@ -470,7 +470,7 @@ export default function Escalas() {
 
         {/* ========== CAMBONES ========== */}
         <TabsContent value="cambones">
-          {isAdmin && (
+          {canManageEscalas && (
             <Dialog open={openCambone} onOpenChange={setOpenCambone}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1 mb-4 w-full"><Plus className="w-4 h-4" /> Escalar Cambones</Button>
