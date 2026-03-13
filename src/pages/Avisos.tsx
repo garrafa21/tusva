@@ -121,6 +121,12 @@ export default function Avisos() {
         criado_por: user?.id,
       });
       if (error) throw error;
+
+      void sendPushNotification({
+        title: titulo,
+        body: conteudo,
+        url: "/avisos",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
