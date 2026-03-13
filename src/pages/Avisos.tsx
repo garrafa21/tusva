@@ -223,8 +223,14 @@ export default function Avisos() {
                 <DialogDescription className="text-muted-foreground">Envie um aviso para todos os filhos do terreiro.</DialogDescription>
               </DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); createAviso.mutate(new FormData(e.currentTarget)); }} className="space-y-3">
-                <div><Label>Título</Label><Input name="titulo" required className="bg-secondary" /></div>
-                <div><Label>Conteúdo</Label><Textarea name="conteudo" required className="bg-secondary" rows={4} /></div>
+                <div>
+                  <Label>Título</Label>
+                  <Input name="titulo" required maxLength={50} className="bg-secondary" placeholder="Máximo 50 caracteres" />
+                </div>
+                <div>
+                  <Label>Conteúdo</Label>
+                  <Textarea name="conteudo" required maxLength={120} className="bg-secondary" rows={4} placeholder="Máximo 120 caracteres" />
+                </div>
                 <div><Label>Prioridade</Label>
                   <Select name="prioridade" defaultValue="normal">
                     <SelectTrigger className="bg-secondary"><SelectValue /></SelectTrigger>
