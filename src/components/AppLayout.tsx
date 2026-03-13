@@ -1,14 +1,19 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, ClipboardList, Bell, BookOpen, Home, Users, LogOut, User, Settings, Moon, Sun } from "lucide-react";
+import { Calendar, ClipboardList, Bell, BookOpen, Home, Users, LogOut, User, Settings, Moon, Sun, Sparkles, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
 
 const navItems = [
   { to: "/", icon: Home, label: "Início" },
   { to: "/calendario", icon: Calendar, label: "Calendário" },
-  { to: "/escalas", icon: ClipboardList, label: "Escalas" },
+  { to: "/entidades", icon: Sparkles, label: "Entidades" },
   { to: "/avisos", icon: Bell, label: "Avisos" },
+  { to: "/financeiro", icon: DollarSign, label: "Financeiro" },
+];
+
+const moreItems = [
+  { to: "/escalas", icon: ClipboardList, label: "Escalas" },
   { to: "/estudos", icon: BookOpen, label: "Estudos" },
 ];
 
@@ -21,7 +26,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const { isDark, toggle } = useTheme();
 
-  const allItems = [...navItems, ...(isAdmin ? adminItems : [])];
+  const allDesktopItems = [...navItems, ...moreItems, ...(isAdmin ? adminItems : [])];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -29,13 +34,13 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo-tusva.jpg" alt="TUSVA" className="w-8 h-8 rounded-full object-cover" />
+            <img src="/logo-tusva.jpg" alt="TUSVA" className="w-8 h-8 rounded-full object-cover" loading="eager" />
             <span className="font-display text-sm text-primary hidden sm:inline">TUSVA</span>
           </Link>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {allItems.map((item) => (
+            {allDesktopItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -76,13 +81,13 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md">
-        <div className="flex items-center justify-around px-2 py-1">
-          {allItems.slice(0, 5).map((item) => (
+        <div className="flex items-center justify-around px-1 py-1">
+          {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs transition-colors min-w-[3.5rem]",
+                "flex flex-col items-center gap-0.5 px-1.5 py-1.5 rounded-lg text-[10px] transition-colors min-w-[3rem]",
                 location.pathname === item.to
                   ? "text-primary font-semibold"
                   : "text-muted-foreground"
@@ -96,7 +101,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link
               to="/admin/membros"
               className={cn(
-                "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs transition-colors min-w-[3.5rem]",
+                "flex flex-col items-center gap-0.5 px-1.5 py-1.5 rounded-lg text-[10px] transition-colors min-w-[3rem]",
                 location.pathname.startsWith("/admin")
                   ? "text-primary font-semibold"
                   : "text-muted-foreground"

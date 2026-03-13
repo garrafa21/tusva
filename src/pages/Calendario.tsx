@@ -51,7 +51,7 @@ export default function Calendario() {
       const { error } = await supabase.from("eventos").insert({
         titulo: form.get("titulo") as string,
         descricao: (form.get("descricao") as string) || null,
-        tipo: form.get("tipo") as string,
+        tipo: form.get("tipo") as any,
         data_inicio: dataInicio,
         criado_por: user?.id,
       });

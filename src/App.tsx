@@ -13,6 +13,8 @@ import Calendario from "./pages/Calendario";
 import Escalas from "./pages/Escalas";
 import Avisos from "./pages/Avisos";
 import Estudos from "./pages/Estudos";
+import Entidades from "./pages/Entidades";
+import Financeiro from "./pages/Financeiro";
 import Perfil from "./pages/Perfil";
 import AdminMembros from "./pages/AdminMembros";
 import NotFound from "./pages/NotFound";
@@ -23,64 +25,15 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
-    <Route
-      path="/"
-      element={
-        <ProtectedRoute>
-          <AppLayout><Dashboard /></AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/calendario"
-      element={
-        <ProtectedRoute>
-          <AppLayout><Calendario /></AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/escalas"
-      element={
-        <ProtectedRoute>
-          <AppLayout><Escalas /></AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/avisos"
-      element={
-        <ProtectedRoute>
-          <AppLayout><Avisos /></AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/estudos"
-      element={
-        <ProtectedRoute>
-          <AppLayout><Estudos /></AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/perfil"
-      element={
-        <ProtectedRoute>
-          <AppLayout><Perfil /></AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/membros"
-      element={
-        <ProtectedRoute>
-          <AdminRoute>
-            <AppLayout><AdminMembros /></AppLayout>
-          </AdminRoute>
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
+    <Route path="/calendario" element={<ProtectedRoute><AppLayout><Calendario /></AppLayout></ProtectedRoute>} />
+    <Route path="/escalas" element={<ProtectedRoute><AppLayout><Escalas /></AppLayout></ProtectedRoute>} />
+    <Route path="/avisos" element={<ProtectedRoute><AppLayout><Avisos /></AppLayout></ProtectedRoute>} />
+    <Route path="/estudos" element={<ProtectedRoute><AppLayout><Estudos /></AppLayout></ProtectedRoute>} />
+    <Route path="/entidades" element={<ProtectedRoute><AppLayout><Entidades /></AppLayout></ProtectedRoute>} />
+    <Route path="/financeiro" element={<ProtectedRoute><AppLayout><Financeiro /></AppLayout></ProtectedRoute>} />
+    <Route path="/perfil" element={<ProtectedRoute><AppLayout><Perfil /></AppLayout></ProtectedRoute>} />
+    <Route path="/admin/membros" element={<ProtectedRoute><AdminRoute><AppLayout><AdminMembros /></AppLayout></AdminRoute></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
