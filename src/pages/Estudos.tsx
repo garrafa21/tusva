@@ -612,10 +612,10 @@ export default function Estudos() {
 
           {isAdmin && editingEntidade && (
             <Dialog open={!!editingEntidade} onOpenChange={(openValue) => !openValue && setEditingEntidade(null)}>
-              <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
+              <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto pb-8">
                 <DialogHeader>
                   <DialogTitle className="font-display">Editar Entidade</DialogTitle>
-                </DialogHeader>
+                  <DialogDescription>Altere os dados da entidade</DialogDescription>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
