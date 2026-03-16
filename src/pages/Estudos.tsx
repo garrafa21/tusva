@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { BookOpen, Plus, ArrowLeft, Trash2, ChevronDown, Pencil } from "lucide-react";
@@ -568,9 +568,10 @@ export default function Estudos() {
                     <Plus className="w-4 h-4" /> Nova Entidade
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
+                <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto pb-8">
                   <DialogHeader>
                     <DialogTitle className="font-display">Cadastrar Entidade de Médium</DialogTitle>
+                    <DialogDescription>Preencha os dados da entidade</DialogDescription>
                   </DialogHeader>
                   <form
                     onSubmit={(e) => {
@@ -612,9 +613,10 @@ export default function Estudos() {
 
           {isAdmin && editingEntidade && (
             <Dialog open={!!editingEntidade} onOpenChange={(openValue) => !openValue && setEditingEntidade(null)}>
-              <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
+              <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto pb-8">
                 <DialogHeader>
                   <DialogTitle className="font-display">Editar Entidade</DialogTitle>
+                  <DialogDescription>Altere os dados da entidade</DialogDescription>
                 </DialogHeader>
                 <form
                   onSubmit={(e) => {

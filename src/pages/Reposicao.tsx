@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -48,7 +48,9 @@ export default function Reposicao() {
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set(DEFAULT_ITEMS.map((_, i) => i)));
   const [customItem, setCustomItem] = useState("");
   const [selectedTab, setSelectedTab] = useState("ativas");
-  const [colorInputs, setColorInputs] = useState<Record<string, string>>({});
+  // Colors chosen at creation time for requires_color items: { itemIdx: ["branca", "azul"] }
+  const [creationColors, setCreationColors] = useState<Record<number, string[]>>({});
+  const [colorDraft, setColorDraft] = useState<Record<number, string>>({});
   const canManage = isAdmin || canManageEscalas;
 
   const { data: reposicoes, isLoading } = useQuery({
@@ -126,10 +128,39 @@ export default function Reposicao() {
   const getMyRespostas = (itemId: string) =>
     (respostas ?? []).filter((r) => r.reposicao_item_id === itemId && r.user_id === user?.id);
 
+  // Which selected items require color?
+  const selectedColorItems = useMemo(() => {
+    return Array.from(selectedItems).filter((idx) => DEFAULT_ITEMS[idx]?.requires_color);
+  }, [selectedItems]);
+
+  const addCreationColor = (idx: number) => {
+    const text = (colorDraft[idx] || "").trim();
+    if (!text) return;
+    setCreationColors((prev) => ({
+      ...prev,
+      [idx]: [...(prev[idx] || []), text],
+    }));
+    setColorDraft((prev) => ({ ...prev, [idx]: "" }));
+  };
+
+  const removeCreationColor = (idx: number, colorIdx: number) => {
+    setCreationColors((prev) => ({
+      ...prev,
+      [idx]: (prev[idx] || []).filter((_, i) => i !== colorIdx),
+    }));
+  };
+
   // Create reposição with selected items only
+  // For color items, each color becomes a separate reposicao_item with the color in the name
   const createReposicao = useMutation({
     mutationFn: async () => {
       if (selectedItems.size === 0) throw new Error("Selecione pelo menos um item");
+      // Validate: color items must have at least one color
+      for (const idx of selectedColorItems) {
+        if (!creationColors[idx] || creationColors[idx].length === 0) {
+          throw new Error(`Informe ao menos uma cor para "${DEFAULT_ITEMS[idx].nome}"`);
+        }
+      }
       const titulo = newTitle.trim() || "Reposição";
       const { data: repo, error } = await supabase
         .from("reposicoes")
@@ -138,13 +169,31 @@ export default function Reposicao() {
         .single();
       if (error) throw error;
 
-      const itemsToInsert = Array.from(selectedItems).map((idx, sortIdx) => ({
-        reposicao_id: repo.id,
-        nome: DEFAULT_ITEMS[idx].nome,
-        requires_color: DEFAULT_ITEMS[idx].requires_color,
-        sort_order: sortIdx,
-        is_custom: false,
-      }));
+      const itemsToInsert: any[] = [];
+      let sortIdx = 0;
+      for (const idx of Array.from(selectedItems).sort((a, b) => a - b)) {
+        const item = DEFAULT_ITEMS[idx];
+        if (item.requires_color) {
+          // Create one item per color
+          for (const color of creationColors[idx] || []) {
+            itemsToInsert.push({
+              reposicao_id: repo.id,
+              nome: `${item.nome} - ${color}`,
+              requires_color: false, // color is already in the name
+              sort_order: sortIdx++,
+              is_custom: false,
+            });
+          }
+        } else {
+          itemsToInsert.push({
+            reposicao_id: repo.id,
+            nome: item.nome,
+            requires_color: false,
+            sort_order: sortIdx++,
+            is_custom: false,
+          });
+        }
+      }
 
       const { error: itemsErr } = await supabase
         .from("reposicao_itens")
@@ -157,6 +206,8 @@ export default function Reposicao() {
       setOpenNew(false);
       setNewTitle("");
       setSelectedItems(new Set(DEFAULT_ITEMS.map((_, i) => i)));
+      setCreationColors({});
+      setColorDraft({});
       toast({ title: "Reposição criada!" });
     },
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
@@ -185,7 +236,6 @@ export default function Reposicao() {
   // Delete custom item
   const deleteItem = useMutation({
     mutationFn: async (itemId: string) => {
-      // First delete all respostas for this item
       await supabase.from("reposicao_respostas").delete().eq("reposicao_item_id", itemId);
       const { error } = await supabase.from("reposicao_itens").delete().eq("id", itemId);
       if (error) throw error;
@@ -201,14 +251,11 @@ export default function Reposicao() {
   // Delete reposição
   const deleteReposicao = useMutation({
     mutationFn: async (repoId: string) => {
-      // Delete respostas for all items of this repo
       const repoItens = getItensForRepo(repoId);
       for (const item of repoItens) {
         await supabase.from("reposicao_respostas").delete().eq("reposicao_item_id", item.id);
       }
-      // Delete items
       await supabase.from("reposicao_itens").delete().eq("reposicao_id", repoId);
-      // Delete repo
       const { error } = await supabase.from("reposicoes").delete().eq("id", repoId);
       if (error) throw error;
     },
@@ -237,15 +284,14 @@ export default function Reposicao() {
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
-  // Add vote (allows multiple for color items)
+  // Add vote (simple, no color needed since colors are in item name now)
   const addVote = useMutation({
-    mutationFn: async ({ itemId, colorDetail }: { itemId: string; colorDetail?: string }) => {
+    mutationFn: async ({ itemId }: { itemId: string }) => {
       const { error } = await supabase
         .from("reposicao_respostas")
         .insert({
           reposicao_item_id: itemId,
           user_id: user!.id,
-          color_detail: colorDetail || null,
         });
       if (error) throw error;
     },
@@ -273,8 +319,14 @@ export default function Reposicao() {
   const toggleItemSelection = (idx: number) => {
     setSelectedItems((prev) => {
       const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+      if (next.has(idx)) {
+        next.delete(idx);
+        // Clear colors if deselected
+        setCreationColors((p) => { const n = { ...p }; delete n[idx]; return n; });
+        setColorDraft((p) => { const n = { ...p }; delete n[idx]; return n; });
+      } else {
+        next.add(idx);
+      }
       return next;
     });
   };
@@ -379,7 +431,6 @@ export default function Reposicao() {
                           <Users className="w-3 h-3" /> {itemRespostas.length}
                         </span>
                       )}
-                      {/* Delete custom item button for creator/admin */}
                       {item.is_custom && canDelete && !isArchived && (
                         <Button
                           size="icon"
@@ -406,7 +457,7 @@ export default function Reposicao() {
                           }}
                         >
                           <Check className="w-2.5 h-2.5" />
-                          {r.color_detail ? r.color_detail : "Eu"}
+                          Eu
                           {!isArchived && <X className="w-2.5 h-2.5 ml-0.5" />}
                         </Badge>
                       ))}
@@ -414,47 +465,16 @@ export default function Reposicao() {
                   )}
 
                   {/* Add vote button */}
-                  {!isArchived && (
+                  {!isArchived && !voted && (
                     <div className="mt-1.5 pl-1">
-                      {item.requires_color ? (
-                        <div className="flex items-center gap-1">
-                          <Input
-                            placeholder="Cor (ex: branca)"
-                            className="bg-secondary text-xs h-6 w-32"
-                            value={colorInputs[item.id] || ""}
-                            onChange={(e) => setColorInputs((p) => ({ ...p, [item.id]: e.target.value }))}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && colorInputs[item.id]?.trim()) {
-                                addVote.mutate({ itemId: item.id, colorDetail: colorInputs[item.id].trim() });
-                                setColorInputs((p) => ({ ...p, [item.id]: "" }));
-                              }
-                            }}
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 text-xs px-2"
-                            disabled={!colorInputs[item.id]?.trim()}
-                            onClick={() => {
-                              if (colorInputs[item.id]?.trim()) {
-                                addVote.mutate({ itemId: item.id, colorDetail: colorInputs[item.id].trim() });
-                                setColorInputs((p) => ({ ...p, [item.id]: "" }));
-                              }
-                            }}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ) : !voted ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 text-xs px-2 gap-1"
-                          onClick={() => addVote.mutate({ itemId: item.id })}
-                        >
-                          <Check className="w-3 h-3" /> Vou levar
-                        </Button>
-                      ) : null}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-xs px-2 gap-1"
+                        onClick={() => addVote.mutate({ itemId: item.id })}
+                      >
+                        <Check className="w-3 h-3" /> Vou levar
+                      </Button>
                     </div>
                   )}
 
@@ -465,7 +485,6 @@ export default function Reposicao() {
                         {itemRespostas.map((r) => (
                           <span key={r.id} className="text-[10px] bg-secondary rounded-full px-2 py-0.5 text-muted-foreground">
                             {getNome(r.user_id)}
-                            {r.color_detail && ` (${r.color_detail})`}
                           </span>
                         ))}
                       </div>
@@ -523,6 +542,7 @@ export default function Reposicao() {
           <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display">Nova Reposição</DialogTitle>
+              <DialogDescription>Selecione os itens que estão faltando no terreiro</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               <div>
@@ -551,26 +571,84 @@ export default function Reposicao() {
                     size="sm"
                     variant="outline"
                     className="text-xs"
-                    onClick={() => setSelectedItems(new Set())}
+                    onClick={() => {
+                      setSelectedItems(new Set());
+                      setCreationColors({});
+                      setColorDraft({});
+                    }}
                   >
                     Nenhum
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto border border-border rounded-lg p-2">
+                <div className="grid grid-cols-1 gap-1 max-h-48 overflow-y-auto border border-border rounded-lg p-2">
                   {DEFAULT_ITEMS.map((item, idx) => (
-                    <label key={idx} className="flex items-center gap-2 cursor-pointer hover:bg-secondary/50 rounded px-1 py-0.5">
-                      <Checkbox
-                        checked={selectedItems.has(idx)}
-                        onCheckedChange={() => toggleItemSelection(idx)}
-                      />
-                      <span className="text-sm">{item.nome}</span>
-                      {item.requires_color && (
-                        <span className="text-xs text-muted-foreground">(cor)</span>
-                      )}
-                    </label>
+                    <div key={idx}>
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-secondary/50 rounded px-1 py-0.5">
+                        <Checkbox
+                          checked={selectedItems.has(idx)}
+                          onCheckedChange={() => toggleItemSelection(idx)}
+                        />
+                        <span className="text-sm">{item.nome}</span>
+                        {item.requires_color && (
+                          <span className="text-xs text-muted-foreground">(cor)</span>
+                        )}
+                      </label>
+                    </div>
                   ))}
                 </div>
               </div>
+
+              {/* Color inputs for selected color items */}
+              {selectedColorItems.length > 0 && (
+                <div className="space-y-3 border border-border rounded-lg p-3">
+                  <Label className="text-xs font-semibold text-primary">Informe as cores que estão faltando:</Label>
+                  {selectedColorItems.map((idx) => (
+                    <div key={idx} className="space-y-1.5">
+                      <span className="text-sm font-medium">{DEFAULT_ITEMS[idx].nome}</span>
+                      {/* Show added colors */}
+                      {(creationColors[idx] || []).length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {creationColors[idx].map((color, ci) => (
+                            <Badge key={ci} variant="secondary" className="text-xs gap-1">
+                              {color}
+                              <X
+                                className="w-3 h-3 cursor-pointer hover:text-destructive"
+                                onClick={() => removeCreationColor(idx, ci)}
+                              />
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {/* Input to add color */}
+                      <div className="flex items-center gap-1">
+                        <Input
+                          placeholder="Ex: branca, azul..."
+                          className="bg-secondary text-sm h-8 flex-1"
+                          value={colorDraft[idx] || ""}
+                          onChange={(e) => setColorDraft((p) => ({ ...p, [idx]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addCreationColor(idx);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 shrink-0"
+                          disabled={!(colorDraft[idx] || "").trim()}
+                          onClick={() => addCreationColor(idx)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground">
                 {selectedItems.size} item(ns) selecionado(s). A reposição expira em 15 dias.
               </p>

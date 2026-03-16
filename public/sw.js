@@ -1,4 +1,4 @@
-const CACHE_VERSION = "tusva-v2";
+const CACHE_VERSION = "tusva-v3";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
