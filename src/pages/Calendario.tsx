@@ -42,7 +42,7 @@ const linhaCor: Record<string, string> = {
 const SAO_PAULO_OFFSET = "-03:00";
 
 export default function Calendario() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, canManageEscalas, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
