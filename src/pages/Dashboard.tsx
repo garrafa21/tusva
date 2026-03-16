@@ -47,6 +47,7 @@ export default function Dashboard() {
         .maybeSingle();
       return data;
     },
+    enabled: !!user,
   });
 
   const { data: avisosNaoLidos } = useQuery({
@@ -77,6 +78,7 @@ export default function Dashboard() {
       const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
       return data ?? [];
     },
+    enabled: !!user,
   });
 
   const { data: girasAbertas } = useQuery({
@@ -253,7 +255,7 @@ export default function Dashboard() {
               <p className="text-sm">
                 <span className="font-medium">{format(new Date(minhaEscala.data + "T00:00:00"), "dd 'de' MMMM", { locale: ptBR })}</span>
                 {minhaEscala.descricao && <span className="text-muted-foreground"> — {minhaEscala.descricao}</span>}
-                {(minhaEscala as any).funcao && <span className="text-muted-foreground"> ({(minhaEscala as any).funcao})</span>}
+                {minhaEscala.funcao && <span className="text-muted-foreground"> ({minhaEscala.funcao})</span>}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">Nenhuma limpeza agendada para você</p>

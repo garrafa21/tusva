@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,12 +33,6 @@ const funcoesLimpezaLabel: Record<string, string> = {
   conga: "🕯️ Congá", salao: "🏠 Salão", escada: "🪜 Escada", lixos: "🗑️ Lixos",
 };
 
-function startOfLocalDayIso() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
 export default function Avisos() {
   const { isAdmin, user } = useAuth();
   const { toast } = useToast();
@@ -52,9 +46,9 @@ export default function Avisos() {
       if (error) throw error;
       return data;
     },
+    enabled: !!user,
   });
 
-  // Only show giras that haven't passed yet
   const { data: proximasGiras } = useQuery({
     queryKey: ["proximas-giras-avisos"],
     queryFn: async () => {
@@ -66,6 +60,7 @@ export default function Avisos() {
         .order("data_inicio", { ascending: true });
       return data ?? [];
     },
+    enabled: !!user,
   });
 
   const { data: meusCambones } = useQuery({
@@ -74,6 +69,7 @@ export default function Avisos() {
       const { data } = await supabase.from("cambones").select("*");
       return data ?? [];
     },
+    enabled: !!user,
   });
 
   const { data: minhasFuncoes } = useQuery({
@@ -82,9 +78,9 @@ export default function Avisos() {
       const { data } = await supabase.from("funcoes_gira").select("*");
       return data ?? [];
     },
+    enabled: !!user,
   });
 
-  // Fetch escalas for personal limpeza cards
   const { data: minhasEscalas } = useQuery({
     queryKey: ["minhas-escalas-avisos"],
     queryFn: async () => {
@@ -96,15 +92,23 @@ export default function Avisos() {
         .order("data", { ascending: true });
       return data ?? [];
     },
+    enabled: !!user,
   });
 
   const { data: membros } = useQuery({
     queryKey: ["membros-avisos"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      const { data, error } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      if (error) throw error;
       return data ?? [];
     },
+    enabled: !!user,
   });
+
+  const membrosOrdenados = useMemo(
+    () => [...(membros ?? [])].sort((a, b) => (a.nome_espiritual || a.nome).localeCompare(b.nome_espiritual || b.nome, "pt-BR")),
+    [membros]
+  );
 
   const createAviso = useMutation({
     mutationFn: async (form: FormData) => {
@@ -123,17 +127,21 @@ export default function Avisos() {
       });
       if (error) throw error;
 
-      void sendPushNotification({
+      const pushDelivered = await sendPushNotification({
         title: titulo,
         body: conteudo,
         url: "/avisos",
       });
+
+      return { pushDelivered };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["avisos"] });
       queryClient.invalidateQueries({ queryKey: ["avisos-nao-lidos"] });
       setOpen(false);
-      toast({ title: "Aviso publicado!" });
+      toast({
+        title: result.pushDelivered ? "Aviso publicado!" : "Aviso publicado, mas a notificação não foi enviada.",
+      });
     },
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
@@ -153,7 +161,7 @@ export default function Avisos() {
 
   const marcarComoLido = useMutation({
     mutationFn: async (avisoId: string) => {
-      const { error } = await supabase.rpc("mark_aviso_lido" as any, { _aviso_id: avisoId } as any);
+      const { error } = await supabase.rpc("mark_aviso_lido" as never, { _aviso_id: avisoId } as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -164,16 +172,14 @@ export default function Avisos() {
   });
 
   const getNome = (id: string) => {
-    const m = membros?.find((m) => m.user_id === id);
+    const m = membros?.find((membro) => membro.user_id === id);
     return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
   };
 
-  // Build personal assignment cards for upcoming giras
   const personalCards: { tipo: string; texto: string; giraTitle: string; giraDate: Date; icon: "cambone" | "funcao" | "limpeza" }[] = [];
 
   if (proximasGiras && user) {
     for (const gira of proximasGiras) {
-      // Cambones
       const meuCambone = meusCambones?.find((c) => c.cambone_user_id === user.id && c.evento_id === gira.id);
       if (meuCambone) {
         personalCards.push({
@@ -185,7 +191,6 @@ export default function Avisos() {
         });
       }
 
-      // Funções
       const minhasFuncoesGira = minhasFuncoes?.filter((f) => f.user_id === user.id && f.evento_id === gira.id) ?? [];
       for (const f of minhasFuncoesGira) {
         personalCards.push({
@@ -199,13 +204,12 @@ export default function Avisos() {
     }
   }
 
-  // Escalas de limpeza for this user
   if (minhasEscalas && user) {
     const minhas = minhasEscalas.filter((e) => e.responsaveis.includes(user.id));
     for (const escala of minhas) {
       const escalaDate = new Date(escala.data + "T00:00:00");
-      const funcaoStr = (escala as any).funcao ? (funcoesLimpezaLabel[(escala as any).funcao] || (escala as any).funcao) : "Limpeza geral";
-      const tipoStr = (escala as any).tipo_escala === "gira" ? "Limpeza pós-gira" : "Limpeza fim de semana";
+      const funcaoStr = escala.funcao ? (funcoesLimpezaLabel[escala.funcao] || escala.funcao) : "Limpeza geral";
+      const tipoStr = escala.tipo_escala === "gira" ? "Limpeza pós-gira" : "Limpeza fim de semana";
       personalCards.push({
         tipo: "limpeza",
         texto: `${tipoStr}: ${funcaoStr}`,
@@ -258,7 +262,6 @@ export default function Avisos() {
         )}
       </div>
 
-      {/* Personal assignment cards */}
       {personalCards.length > 0 && (
         <div className="space-y-2 mb-6">
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Suas atribuições</h2>
@@ -267,7 +270,7 @@ export default function Avisos() {
             return (
               <Card key={i} className="bg-primary/5 border-primary/20">
                 <CardContent className="p-3 flex items-center gap-3">
-                  {card.icon === "cambone" ? <Users className="w-5 h-5 text-primary shrink-0" /> : 
+                  {card.icon === "cambone" ? <Users className="w-5 h-5 text-primary shrink-0" /> :
                    card.icon === "funcao" ? <Shield className="w-5 h-5 text-primary shrink-0" /> :
                    <Sparkles className="w-5 h-5 text-primary shrink-0" />}
                   <div>
@@ -287,6 +290,9 @@ export default function Avisos() {
         <div className="space-y-3">
           {avisos?.map((a) => {
             const lido = a.lido_por.includes(user?.id ?? "");
+            const quemLeu = membrosOrdenados.filter((membro) => a.lido_por.includes(membro.user_id));
+            const quemNaoLeu = membrosOrdenados.filter((membro) => !a.lido_por.includes(membro.user_id));
+
             return (
               <Card key={a.id} className={`bg-card border-border border-l-4 ${prioridadeCor[a.prioridade]} ${!lido ? "ring-1 ring-primary/20" : ""}`}>
                 <CardContent className="p-4">
@@ -319,6 +325,29 @@ export default function Avisos() {
                       )}
                     </div>
                   </div>
+
+                  {isAdmin && (
+                    <div className="mt-4 border-t border-border pt-3 space-y-2">
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="rounded-full bg-primary/10 px-2 py-1 text-primary">Leram: {quemLeu.length}</span>
+                        <span className="rounded-full bg-secondary px-2 py-1 text-muted-foreground">Faltam: {quemNaoLeu.length}</span>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2 text-xs">
+                        <div>
+                          <p className="font-medium text-foreground mb-1">Quem leu</p>
+                          <p className="text-muted-foreground whitespace-pre-wrap">
+                            {quemLeu.length > 0 ? quemLeu.map((membro) => membro.nome_espiritual || membro.nome).join(", ") : "Ninguém ainda"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground mb-1">Quem ainda não leu</p>
+                          <p className="text-muted-foreground whitespace-pre-wrap">
+                            {quemNaoLeu.length > 0 ? quemNaoLeu.map((membro) => membro.nome_espiritual || membro.nome).join(", ") : "Todos já leram"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

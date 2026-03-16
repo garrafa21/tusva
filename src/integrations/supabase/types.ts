@@ -460,6 +460,109 @@ export type Database = {
         }
         Relationships: []
       }
+      reposicao_itens: {
+        Row: {
+          created_at: string
+          id: string
+          is_custom: boolean
+          nome: string
+          reposicao_id: string
+          requires_color: boolean
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_custom?: boolean
+          nome: string
+          reposicao_id: string
+          requires_color?: boolean
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_custom?: boolean
+          nome?: string
+          reposicao_id?: string
+          requires_color?: boolean
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposicao_itens_reposicao_id_fkey"
+            columns: ["reposicao_id"]
+            isOneToOne: false
+            referencedRelation: "reposicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reposicao_respostas: {
+        Row: {
+          color_detail: string | null
+          created_at: string
+          id: string
+          reposicao_item_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color_detail?: string | null
+          created_at?: string
+          id?: string
+          reposicao_item_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color_detail?: string | null
+          created_at?: string
+          id?: string
+          reposicao_item_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposicao_respostas_reposicao_item_id_fkey"
+            columns: ["reposicao_item_id"]
+            isOneToOne: false
+            referencedRelation: "reposicao_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reposicoes: {
+        Row: {
+          created_at: string
+          created_by: string
+          descricao: string | null
+          expires_at: string
+          id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          expires_at?: string
+          id?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          expires_at?: string
+          id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
