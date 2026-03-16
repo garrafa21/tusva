@@ -540,6 +540,35 @@ export default function Escalas() {
               {escalasGira.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma escala de gira cadastrada</p>}
             </div>
           )}
+
+          {/* Archived gira escalas */}
+          {(isAdmin || canManageEscalas) && Object.keys(giraByDatePassadas).length > 0 && (
+            <Collapsible className="mt-6">
+              <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full py-2">
+                <Archive className="w-3 h-3" />
+                <span>Escalas passadas ({Object.keys(giraByDatePassadas).length})</span>
+                <ChevronDown className="w-3 h-3 ml-auto" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-2">
+                {Object.entries(giraByDatePassadas).map(([data, items]) => (
+                  <Card key={data} className="bg-card border-border opacity-60">
+                    <CardContent className="p-3">
+                      <p className="font-display font-semibold text-xs">{format(new Date(data + "T00:00:00"), "dd 'de' MMMM, EEEE", { locale: ptBR })}</p>
+                      {items[0]?.descricao && <p className="text-xs text-muted-foreground">{items[0].descricao}</p>}
+                      <div className="space-y-1 mt-1">
+                        {items.map((e) => (
+                          <div key={e.id} className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{funcoesGira.find((f) => f.value === e.funcao)?.label || e.funcao}</span>
+                            <span>{e.responsaveis.map((uid) => getNome(uid)).join(", ")}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </TabsContent>
 
         {/* ========== FIM DE SEMANA ========== */}
