@@ -568,10 +568,10 @@ export default function Estudos() {
                     <Plus className="w-4 h-4" /> Nova Entidade
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
+                <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto pb-8">
                   <DialogHeader>
                     <DialogTitle className="font-display">Cadastrar Entidade de Médium</DialogTitle>
-                  </DialogHeader>
+                    <DialogDescription>Preencha os dados da entidade</DialogDescription>
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
