@@ -340,18 +340,27 @@ export default function Escalas() {
     return `${gira.titulo}${linha} (${format(new Date(gira.data_inicio), "dd/MM", { locale: ptBR })})`;
   };
 
-  const escalasGira = escalas?.filter((e) => (e as any).tipo_escala === "gira") ?? [];
-  const escalasFds = escalas?.filter((e) => (e as any).tipo_escala === "fim_de_semana" || !(e as any).tipo_escala) ?? [];
+  const escalasGira = escalas?.filter((e) => e.tipo_escala === "gira") ?? [];
+  const escalasFds = escalas?.filter((e) => e.tipo_escala === "fim_de_semana" || !e.tipo_escala) ?? [];
 
-  // Group gira escalas by date (already filtered to future only by query)
+  // Archived data
+  const escalasGiraPassadas = escalasPassadas?.filter((e) => e.tipo_escala === "gira") ?? [];
+  const escalasFdsPassadas = escalasPassadas?.filter((e) => e.tipo_escala === "fim_de_semana" || !e.tipo_escala) ?? [];
+
   const giraByDate = escalasGira.reduce<Record<string, typeof escalasGira>>((acc, e) => {
     if (!acc[e.data]) acc[e.data] = [];
     acc[e.data].push(e);
     return acc;
   }, {});
 
-  // Group cambones by evento - only show future giras
+  const giraByDatePassadas = escalasGiraPassadas.reduce<Record<string, typeof escalasGiraPassadas>>((acc, e) => {
+    if (!acc[e.data]) acc[e.data] = [];
+    acc[e.data].push(e);
+    return acc;
+  }, {});
+
   const futureGiraIds = new Set(giras?.map((g) => g.id) ?? []);
+  const allGiraMap = new Map((allGiras ?? giras ?? []).map((g) => [g.id, g]));
 
   const cambonesByEvento = (cambones ?? []).reduce<Record<string, typeof cambones>>((acc, c) => {
     if (!futureGiraIds.has(c.evento_id)) return acc;
@@ -360,8 +369,24 @@ export default function Escalas() {
     return acc;
   }, {});
 
+  const cambonesByEventoPassados = (cambones ?? []).reduce<Record<string, typeof cambones>>((acc, c) => {
+    if (futureGiraIds.has(c.evento_id)) return acc;
+    if (!allGiraMap.has(c.evento_id)) return acc;
+    if (!acc[c.evento_id]) acc[c.evento_id] = [];
+    acc[c.evento_id].push(c);
+    return acc;
+  }, {});
+
   const funcoesByEvento = (funcoesGiraData ?? []).reduce<Record<string, typeof funcoesGiraData>>((acc, f) => {
     if (!futureGiraIds.has(f.evento_id)) return acc;
+    if (!acc[f.evento_id]) acc[f.evento_id] = [];
+    acc[f.evento_id].push(f);
+    return acc;
+  }, {});
+
+  const funcoesByEventoPassados = (funcoesGiraData ?? []).reduce<Record<string, typeof funcoesGiraData>>((acc, f) => {
+    if (futureGiraIds.has(f.evento_id)) return acc;
+    if (!allGiraMap.has(f.evento_id)) return acc;
     if (!acc[f.evento_id]) acc[f.evento_id] = [];
     acc[f.evento_id].push(f);
     return acc;
