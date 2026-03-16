@@ -540,6 +540,7 @@ export type Database = {
           descricao: string | null
           expires_at: string
           id: string
+          status: string
           titulo: string
           updated_at: string
         }
@@ -549,6 +550,7 @@ export type Database = {
           descricao?: string | null
           expires_at?: string
           id?: string
+          status?: string
           titulo: string
           updated_at?: string
         }
@@ -558,6 +560,7 @@ export type Database = {
           descricao?: string | null
           expires_at?: string
           id?: string
+          status?: string
           titulo?: string
           updated_at?: string
         }
