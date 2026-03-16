@@ -789,6 +789,39 @@ export default function Escalas() {
             })}
             {Object.keys(cambonesByEvento).length === 0 && <p className="text-center text-muted-foreground py-8">Nenhum cambone escalado</p>}
           </div>
+
+          {(isAdmin || canManageEscalas) && Object.keys(cambonesByEventoPassados).length > 0 && (
+            <Collapsible className="mt-6">
+              <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full py-2">
+                <Archive className="w-3 h-3" />
+                <span>Cambones passados ({Object.keys(cambonesByEventoPassados).length} giras)</span>
+                <ChevronDown className="w-3 h-3 ml-auto" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-2">
+                {Object.entries(cambonesByEventoPassados).map(([eventoId, items]) => {
+                  const gira = allGiraMap.get(eventoId);
+                  if (!gira) return null;
+                  return (
+                    <Card key={eventoId} className="bg-card border-border opacity-60">
+                      <CardContent className="p-3">
+                        <p className="font-display font-semibold text-xs">{gira.titulo}</p>
+                        <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                        <div className="space-y-1 mt-1">
+                          {items!.map((c) => (
+                            <div key={c.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{getNome(c.medium_user_id)}</span>
+                              <span>→</span>
+                              <span>{getNome(c.cambone_user_id)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </TabsContent>
 
         {/* ========== DEMAIS FUNÇÕES ========== */}
