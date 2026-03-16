@@ -87,69 +87,97 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [canManageEscalas, setCanManageEscalas] = useState(false);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
 
+  const resetUserState = () => {
+    setIsAdmin(false);
+    setCanManageEscalas(false);
+    setProfile(null);
+  };
+
   const fetchUserData = async (userId: string) => {
     const [rolesResult, profileResult] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase.from("profiles").select("nome, nome_espiritual, avatar_url").eq("user_id", userId).maybeSingle(),
     ]);
 
+    if (rolesResult.error) throw rolesResult.error;
+    if (profileResult.error) throw profileResult.error;
+
     const roles = (rolesResult.data ?? []).map((r) => r.role);
     const admin = roles.includes("admin");
     const escala = roles.includes("escala");
 
-    setIsAdmin(admin);
-    setCanManageEscalas(admin || escala);
-
-    if (profileResult.data) {
-      setProfile(profileResult.data);
-    }
+    return {
+      isAdmin: admin,
+      canManageEscalas: admin || escala,
+      profile: profileResult.data ?? null,
+    };
   };
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    let isMounted = true;
+    let requestId = 0;
+
+    const applySession = async (nextSession: Session | null) => {
+      const currentRequestId = ++requestId;
+
+      if (!isMounted) return;
       setSession(nextSession);
 
       if (nextSession?.access_token) {
         supabase.realtime.setAuth(nextSession.access_token);
       }
 
-      if (nextSession?.user) {
-        setTimeout(() => fetchUserData(nextSession.user.id), 0);
-      } else {
-        setIsAdmin(false);
-        setCanManageEscalas(false);
-        setProfile(null);
+      if (!nextSession?.user) {
+        resetUserState();
+        if (isMounted && currentRequestId === requestId) {
+          setIsLoading(false);
+        }
+        return;
       }
-      setIsLoading(false);
+
+      try {
+        const userData = await fetchUserData(nextSession.user.id);
+        if (!isMounted || currentRequestId !== requestId) return;
+
+        setIsAdmin(userData.isAdmin);
+        setCanManageEscalas(userData.canManageEscalas);
+        setProfile(userData.profile);
+      } catch (error) {
+        console.error("Erro ao carregar dados do usuário:", error);
+        if (!isMounted || currentRequestId !== requestId) return;
+        resetUserState();
+      }
+
+      if (isMounted && currentRequestId === requestId) {
+        setIsLoading(false);
+      }
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      void applySession(nextSession);
     });
 
-    supabase.auth.getSession().then(({ data: { session: activeSession } }) => {
-      setSession(activeSession);
+    void supabase.auth
+      .getSession()
+      .then(({ data: { session: activeSession } }) => applySession(activeSession))
+      .catch((error) => {
+        console.error("Erro ao restaurar sessão:", error);
+        void applySession(null);
+      });
 
-      if (activeSession?.access_token) {
-        supabase.realtime.setAuth(activeSession.access_token);
-      }
-
-      if (activeSession?.user) {
-        fetchUserData(activeSession.user.id);
-      }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    if (!session?.user) return;
+    if (!session?.user || !session.access_token) return;
 
     const userId = session.user.id;
-
-    if (session.access_token) {
-      supabase.realtime.setAuth(session.access_token);
-    }
-
+    supabase.realtime.setAuth(session.access_token);
     void syncPushSubscriptionIfNeeded(userId);
 
     const channel = supabase
@@ -218,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [session?.user, session?.access_token]);
 
   const signOut = async () => {
+    resetUserState();
     await supabase.auth.signOut();
   };
 
