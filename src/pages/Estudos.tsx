@@ -572,6 +572,7 @@ export default function Estudos() {
                   <DialogHeader>
                     <DialogTitle className="font-display">Cadastrar Entidade de Médium</DialogTitle>
                     <DialogDescription>Preencha os dados da entidade</DialogDescription>
+                  </DialogHeader>
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
