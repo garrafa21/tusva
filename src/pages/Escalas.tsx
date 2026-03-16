@@ -64,6 +64,7 @@ export default function Escalas() {
 
   const hoje = new Date().toISOString().split("T")[0];
 
+  // Future giras for creation dialogs
   const { data: giras } = useQuery({
     queryKey: ["giras-futuras"],
     queryFn: async () => {
@@ -78,6 +79,23 @@ export default function Escalas() {
     },
   });
 
+  // All giras (for archive mapping)
+  const { data: allGiras } = useQuery({
+    queryKey: ["giras-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("eventos")
+        .select("*")
+        .in("tipo", ["gira", "desenvolvimento"])
+        .order("data_inicio", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin || canManageEscalas,
+  });
+
+  // Future escalas
   const { data: escalas, isLoading } = useQuery({
     queryKey: ["escalas"],
     queryFn: async () => {
@@ -89,6 +107,22 @@ export default function Escalas() {
       if (error) throw error;
       return data;
     },
+  });
+
+  // Past escalas for archive (admins only)
+  const { data: escalasPassadas } = useQuery({
+    queryKey: ["escalas-passadas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("escalas_limpeza")
+        .select("*")
+        .lt("data", hoje)
+        .order("data", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin || canManageEscalas,
   });
 
   const { data: membros } = useQuery({
