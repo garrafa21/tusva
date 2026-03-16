@@ -42,7 +42,7 @@ const linhaLabel: Record<string, string> = {
 const BLANK_VALUE = "__blank__";
 
 export default function Escalas() {
-  const { canManageEscalas, user } = useAuth();
+  const { canManageEscalas, isAdmin, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("gira");
