@@ -6,11 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Plus, Check, X, Archive, Users, Clock } from "lucide-react";
+import { Package, Plus, Check, Archive, Users, Clock, Trash2, CheckCircle2, X } from "lucide-react";
 import { format, isPast, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -43,11 +45,12 @@ export default function Reposicao() {
   const queryClient = useQueryClient();
   const [openNew, setOpenNew] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set(DEFAULT_ITEMS.map((_, i) => i)));
   const [customItem, setCustomItem] = useState("");
   const [selectedTab, setSelectedTab] = useState("ativas");
+  const [colorInputs, setColorInputs] = useState<Record<string, string>>({});
   const canManage = isAdmin || canManageEscalas;
 
-  // Fetch reposições
   const { data: reposicoes, isLoading } = useQuery({
     queryKey: ["reposicoes"],
     queryFn: async () => {
@@ -89,7 +92,7 @@ export default function Reposicao() {
   const { data: membros } = useQuery({
     queryKey: ["membros-reposicao"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual, avatar_url");
       return data ?? [];
     },
     enabled: !!user,
@@ -100,13 +103,17 @@ export default function Reposicao() {
     return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
   };
 
+  const getProfile = (id: string) => membros?.find((p) => p.user_id === id);
+
+  const isActive = (r: any) => r.status === "ativa" && !isPast(new Date(r.expires_at));
+
   const ativas = useMemo(
-    () => (reposicoes ?? []).filter((r) => !isPast(new Date(r.expires_at))),
+    () => (reposicoes ?? []).filter(isActive),
     [reposicoes]
   );
 
   const arquivadas = useMemo(
-    () => (reposicoes ?? []).filter((r) => isPast(new Date(r.expires_at))),
+    () => (reposicoes ?? []).filter((r) => !isActive(r)),
     [reposicoes]
   );
 
@@ -116,12 +123,13 @@ export default function Reposicao() {
   const getRespostasForItem = (itemId: string) =>
     (respostas ?? []).filter((r) => r.reposicao_item_id === itemId);
 
-  const getMyResposta = (itemId: string) =>
-    respostas?.find((r) => r.reposicao_item_id === itemId && r.user_id === user?.id);
+  const getMyRespostas = (itemId: string) =>
+    (respostas ?? []).filter((r) => r.reposicao_item_id === itemId && r.user_id === user?.id);
 
-  // Create reposição
+  // Create reposição with selected items only
   const createReposicao = useMutation({
     mutationFn: async () => {
+      if (selectedItems.size === 0) throw new Error("Selecione pelo menos um item");
       const titulo = newTitle.trim() || "Reposição";
       const { data: repo, error } = await supabase
         .from("reposicoes")
@@ -130,11 +138,11 @@ export default function Reposicao() {
         .single();
       if (error) throw error;
 
-      const itemsToInsert = DEFAULT_ITEMS.map((item, idx) => ({
+      const itemsToInsert = Array.from(selectedItems).map((idx, sortIdx) => ({
         reposicao_id: repo.id,
-        nome: item.nome,
-        requires_color: item.requires_color,
-        sort_order: idx,
+        nome: DEFAULT_ITEMS[idx].nome,
+        requires_color: DEFAULT_ITEMS[idx].requires_color,
+        sort_order: sortIdx,
         is_custom: false,
       }));
 
@@ -148,6 +156,7 @@ export default function Reposicao() {
       queryClient.invalidateQueries({ queryKey: ["reposicao-itens"] });
       setOpenNew(false);
       setNewTitle("");
+      setSelectedItems(new Set(DEFAULT_ITEMS.map((_, i) => i)));
       toast({ title: "Reposição criada!" });
     },
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
@@ -173,28 +182,72 @@ export default function Reposicao() {
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
-  // Toggle vote
-  const toggleVote = useMutation({
-    mutationFn: async ({ itemId, colorDetail }: { itemId: string; colorDetail?: string }) => {
-      const existing = getMyResposta(itemId);
-      if (existing) {
-        // Remove vote
-        const { error } = await supabase
-          .from("reposicao_respostas")
-          .delete()
-          .eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        // Add vote
-        const { error } = await supabase
-          .from("reposicao_respostas")
-          .insert({
-            reposicao_item_id: itemId,
-            user_id: user!.id,
-            color_detail: colorDetail || null,
-          });
-        if (error) throw error;
+  // Delete custom item
+  const deleteItem = useMutation({
+    mutationFn: async (itemId: string) => {
+      // First delete all respostas for this item
+      await supabase.from("reposicao_respostas").delete().eq("reposicao_item_id", itemId);
+      const { error } = await supabase.from("reposicao_itens").delete().eq("id", itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reposicao-itens"] });
+      queryClient.invalidateQueries({ queryKey: ["reposicao-respostas"] });
+      toast({ title: "Item removido!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+
+  // Delete reposição
+  const deleteReposicao = useMutation({
+    mutationFn: async (repoId: string) => {
+      // Delete respostas for all items of this repo
+      const repoItens = getItensForRepo(repoId);
+      for (const item of repoItens) {
+        await supabase.from("reposicao_respostas").delete().eq("reposicao_item_id", item.id);
       }
+      // Delete items
+      await supabase.from("reposicao_itens").delete().eq("reposicao_id", repoId);
+      // Delete repo
+      const { error } = await supabase.from("reposicoes").delete().eq("id", repoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reposicoes"] });
+      queryClient.invalidateQueries({ queryKey: ["reposicao-itens"] });
+      queryClient.invalidateQueries({ queryKey: ["reposicao-respostas"] });
+      toast({ title: "Reposição excluída!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+
+  // Mark as completed
+  const markCompleted = useMutation({
+    mutationFn: async (repoId: string) => {
+      const { error } = await supabase
+        .from("reposicoes")
+        .update({ status: "concluida" } as any)
+        .eq("id", repoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reposicoes"] });
+      toast({ title: "Reposição marcada como concluída!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+
+  // Add vote (allows multiple for color items)
+  const addVote = useMutation({
+    mutationFn: async ({ itemId, colorDetail }: { itemId: string; colorDetail?: string }) => {
+      const { error } = await supabase
+        .from("reposicao_respostas")
+        .insert({
+          reposicao_item_id: itemId,
+          user_id: user!.id,
+          color_detail: colorDetail || null,
+        });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reposicao-respostas"] });
@@ -202,98 +255,212 @@ export default function Reposicao() {
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
-  // Update color
-  const updateColor = useMutation({
-    mutationFn: async ({ respostaId, color }: { respostaId: string; color: string }) => {
+  // Remove single vote
+  const removeVote = useMutation({
+    mutationFn: async (respostaId: string) => {
       const { error } = await supabase
         .from("reposicao_respostas")
-        .update({ color_detail: color })
+        .delete()
         .eq("id", respostaId);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reposicao-respostas"] });
     },
+    onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
-  const RepoCard = ({ repo, isArchived }: { repo: typeof ativas[0]; isArchived: boolean }) => {
+  const toggleItemSelection = (idx: number) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const RepoCard = ({ repo, isArchived }: { repo: any; isArchived: boolean }) => {
     const repoItens = getItensForRepo(repo.id);
     const expiresAt = new Date(repo.expires_at);
-    const timeLeft = isPast(expiresAt)
-      ? "Expirado"
-      : `Expira ${formatDistanceToNow(expiresAt, { locale: ptBR, addSuffix: true })}`;
+    const isConcluida = repo.status === "concluida";
+    const creatorProfile = getProfile(repo.created_by);
+    const isCreator = user?.id === repo.created_by;
+    const canDelete = isCreator || canManage;
+    const canComplete = isCreator || canManage;
+
+    const timeLeft = isConcluida
+      ? "Concluída"
+      : isPast(expiresAt)
+        ? "Expirada"
+        : `Expira ${formatDistanceToNow(expiresAt, { locale: ptBR, addSuffix: true })}`;
 
     return (
       <Card className={`bg-card border-border ${isArchived ? "opacity-75" : ""}`}>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="font-display font-semibold text-sm">{repo.titulo}</h3>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {timeLeft} — {format(new Date(repo.created_at), "dd/MM/yyyy", { locale: ptBR })}
-              </p>
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Avatar className="w-7 h-7">
+                {creatorProfile?.avatar_url ? (
+                  <AvatarImage src={creatorProfile.avatar_url} alt={getNome(repo.created_by)} />
+                ) : null}
+                <AvatarFallback className="text-[10px]">
+                  {getNome(repo.created_by).slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-display font-semibold text-sm">{repo.titulo}</h3>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {timeLeft} — {getNome(repo.created_by)} · {format(new Date(repo.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                </p>
+              </div>
             </div>
-            {isArchived && (
-              <Badge variant="secondary" className="text-xs">
-                <Archive className="w-3 h-3 mr-1" /> Arquivado
-              </Badge>
-            )}
+            <div className="flex items-center gap-1">
+              {isConcluida && (
+                <Badge variant="secondary" className="text-xs">
+                  <CheckCircle2 className="w-3 h-3 mr-1" /> Concluída
+                </Badge>
+              )}
+              {isArchived && !isConcluida && (
+                <Badge variant="secondary" className="text-xs">
+                  <Archive className="w-3 h-3 mr-1" /> Expirada
+                </Badge>
+              )}
+              {canDelete && !isArchived && (
+                <>
+                  {canComplete && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-green-600 hover:text-green-700"
+                      title="Marcar como concluída"
+                      onClick={() => {
+                        if (confirm("Marcar esta reposição como concluída?")) markCompleted.mutate(repo.id);
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      if (confirm("Excluir esta reposição?")) deleteReposicao.mutate(repo.id);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
             {repoItens.map((item) => {
               const itemRespostas = getRespostasForItem(item.id);
-              const myResposta = getMyResposta(item.id);
-              const voted = !!myResposta;
+              const myRespostas = getMyRespostas(item.id);
+              const voted = myRespostas.length > 0;
 
               return (
                 <div key={item.id} className="border border-border rounded-lg p-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1">
-                      {!isArchived && (
-                        <button
-                          onClick={() => {
-                            if (item.requires_color && !voted) {
-                              const color = prompt("Qual a cor? (ex: branca, vermelha, preta)");
-                              if (color) toggleVote.mutate({ itemId: item.id, colorDetail: color });
-                            } else {
-                              toggleVote.mutate({ itemId: item.id });
-                            }
-                          }}
-                          className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            voted
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground/30 hover:border-primary"
-                          }`}
-                        >
-                          {voted && <Check className="w-3 h-3" />}
-                        </button>
-                      )}
                       <span className={`text-sm ${voted ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                         {item.nome}
                         {item.is_custom && (
                           <span className="text-xs text-muted-foreground ml-1">(outro)</span>
                         )}
                       </span>
-                      {myResposta?.color_detail && (
-                        <Badge variant="outline" className="text-xs ml-1">
-                          {myResposta.color_detail}
-                        </Badge>
-                      )}
                     </div>
-                    <span className="text-xs text-muted-foreground shrink-0">
+                    <div className="flex items-center gap-1">
                       {itemRespostas.length > 0 && (
-                        <span className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Users className="w-3 h-3" /> {itemRespostas.length}
                         </span>
                       )}
-                    </span>
+                      {/* Delete custom item button for creator/admin */}
+                      {item.is_custom && canDelete && !isArchived && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                          onClick={() => deleteItem.mutate(item.id)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
+
+                  {/* My votes */}
+                  {myRespostas.length > 0 && (
+                    <div className="mt-1 pl-1 flex flex-wrap gap-1">
+                      {myRespostas.map((r) => (
+                        <Badge
+                          key={r.id}
+                          variant="default"
+                          className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground gap-1"
+                          onClick={() => {
+                            if (!isArchived) removeVote.mutate(r.id);
+                          }}
+                        >
+                          <Check className="w-2.5 h-2.5" />
+                          {r.color_detail ? r.color_detail : "Eu"}
+                          {!isArchived && <X className="w-2.5 h-2.5 ml-0.5" />}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add vote button */}
+                  {!isArchived && (
+                    <div className="mt-1.5 pl-1">
+                      {item.requires_color ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            placeholder="Cor (ex: branca)"
+                            className="bg-secondary text-xs h-6 w-32"
+                            value={colorInputs[item.id] || ""}
+                            onChange={(e) => setColorInputs((p) => ({ ...p, [item.id]: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && colorInputs[item.id]?.trim()) {
+                                addVote.mutate({ itemId: item.id, colorDetail: colorInputs[item.id].trim() });
+                                setColorInputs((p) => ({ ...p, [item.id]: "" }));
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-xs px-2"
+                            disabled={!colorInputs[item.id]?.trim()}
+                            onClick={() => {
+                              if (colorInputs[item.id]?.trim()) {
+                                addVote.mutate({ itemId: item.id, colorDetail: colorInputs[item.id].trim() });
+                                setColorInputs((p) => ({ ...p, [item.id]: "" }));
+                              }
+                            }}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : !voted ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-xs px-2 gap-1"
+                          onClick={() => addVote.mutate({ itemId: item.id })}
+                        >
+                          <Check className="w-3 h-3" /> Vou levar
+                        </Button>
+                      ) : null}
+                    </div>
+                  )}
 
                   {/* Admin/Cambone Chefe: show who voted */}
                   {canManage && itemRespostas.length > 0 && (
-                    <div className="mt-1.5 pl-8">
+                    <div className="mt-1.5 pl-1">
                       <div className="flex flex-wrap gap-1">
                         {itemRespostas.map((r) => (
                           <span key={r.id} className="text-[10px] bg-secondary rounded-full px-2 py-0.5 text-muted-foreground">
@@ -309,7 +476,7 @@ export default function Reposicao() {
             })}
           </div>
 
-          {/* Add custom item - only for active repos */}
+          {/* Add custom item */}
           {!isArchived && (
             <div className="mt-3 flex gap-2">
               <Input
@@ -347,41 +514,76 @@ export default function Reposicao() {
         <h1 className="font-display text-xl font-bold flex items-center gap-2">
           <Package className="w-5 h-5 text-primary" /> Reposição
         </h1>
-        {canManage && (
-          <Dialog open={openNew} onOpenChange={setOpenNew}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1">
-                <Plus className="w-4 h-4" /> Nova
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader>
-                <DialogTitle className="font-display">Nova Reposição</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div>
-                  <Label>Título (opcional)</Label>
-                  <Input
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="Ex: Reposição Março"
-                    className="bg-secondary"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Os itens padrão serão adicionados automaticamente. A reposição expira em 15 dias.
-                </p>
-                <Button
-                  className="w-full"
-                  onClick={() => createReposicao.mutate()}
-                  disabled={createReposicao.isPending}
-                >
-                  {createReposicao.isPending ? "Criando..." : "Criar Reposição"}
-                </Button>
+        <Dialog open={openNew} onOpenChange={setOpenNew}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="gap-1">
+              <Plus className="w-4 h-4" /> Nova
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-display">Nova Reposição</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Título (opcional)</Label>
+                <Input
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Ex: Reposição Março"
+                  className="bg-secondary"
+                />
               </div>
-            </DialogContent>
-          </Dialog>
-        )}
+              <div>
+                <Label className="mb-2 block">Selecione os itens:</Label>
+                <div className="flex gap-2 mb-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => setSelectedItems(new Set(DEFAULT_ITEMS.map((_, i) => i)))}
+                  >
+                    Todos
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => setSelectedItems(new Set())}
+                  >
+                    Nenhum
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto border border-border rounded-lg p-2">
+                  {DEFAULT_ITEMS.map((item, idx) => (
+                    <label key={idx} className="flex items-center gap-2 cursor-pointer hover:bg-secondary/50 rounded px-1 py-0.5">
+                      <Checkbox
+                        checked={selectedItems.has(idx)}
+                        onCheckedChange={() => toggleItemSelection(idx)}
+                      />
+                      <span className="text-sm">{item.nome}</span>
+                      {item.requires_color && (
+                        <span className="text-xs text-muted-foreground">(cor)</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {selectedItems.size} item(ns) selecionado(s). A reposição expira em 15 dias.
+              </p>
+              <Button
+                className="w-full"
+                onClick={() => createReposicao.mutate()}
+                disabled={createReposicao.isPending || selectedItems.size === 0}
+              >
+                {createReposicao.isPending ? "Criando..." : "Criar Reposição"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {canManage ? (

@@ -42,7 +42,7 @@ const linhaCor: Record<string, string> = {
 const SAO_PAULO_OFFSET = "-03:00";
 
 export default function Calendario() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, canManageEscalas, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -222,8 +222,8 @@ export default function Calendario() {
                     </span>
                   </div>
 
-                  {/* Admin: show who confirmed */}
-                  {isAdmin && confs.length > 0 && (
+                  {/* Admin/Cambone Chefe: show who confirmed */}
+                  {(isAdmin || canManageEscalas) && confs.length > 0 && (
                     <button
                       onClick={() => setShowPresenca(showPresenca === e.id ? null : e.id)}
                       className="text-xs text-primary hover:underline flex items-center gap-1"
