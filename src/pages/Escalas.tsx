@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ClipboardList, Plus, CheckCircle2, Trash2, Sparkles, CalendarDays, Users, Shield } from "lucide-react";
+import { ClipboardList, Plus, CheckCircle2, Trash2, Sparkles, CalendarDays, Users, Shield, Archive, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -41,7 +42,7 @@ const linhaLabel: Record<string, string> = {
 const BLANK_VALUE = "__blank__";
 
 export default function Escalas() {
-  const { canManageEscalas, user } = useAuth();
+  const { canManageEscalas, isAdmin, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("gira");
@@ -63,6 +64,7 @@ export default function Escalas() {
 
   const hoje = new Date().toISOString().split("T")[0];
 
+  // Future giras for creation dialogs
   const { data: giras } = useQuery({
     queryKey: ["giras-futuras"],
     queryFn: async () => {
@@ -77,6 +79,23 @@ export default function Escalas() {
     },
   });
 
+  // All giras (for archive mapping)
+  const { data: allGiras } = useQuery({
+    queryKey: ["giras-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("eventos")
+        .select("*")
+        .in("tipo", ["gira", "desenvolvimento"])
+        .order("data_inicio", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin || canManageEscalas,
+  });
+
+  // Future escalas
   const { data: escalas, isLoading } = useQuery({
     queryKey: ["escalas"],
     queryFn: async () => {
@@ -88,6 +107,22 @@ export default function Escalas() {
       if (error) throw error;
       return data;
     },
+  });
+
+  // Past escalas for archive (admins only)
+  const { data: escalasPassadas } = useQuery({
+    queryKey: ["escalas-passadas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("escalas_limpeza")
+        .select("*")
+        .lt("data", hoje)
+        .order("data", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin || canManageEscalas,
   });
 
   const { data: membros } = useQuery({
@@ -305,18 +340,27 @@ export default function Escalas() {
     return `${gira.titulo}${linha} (${format(new Date(gira.data_inicio), "dd/MM", { locale: ptBR })})`;
   };
 
-  const escalasGira = escalas?.filter((e) => (e as any).tipo_escala === "gira") ?? [];
-  const escalasFds = escalas?.filter((e) => (e as any).tipo_escala === "fim_de_semana" || !(e as any).tipo_escala) ?? [];
+  const escalasGira = escalas?.filter((e) => e.tipo_escala === "gira") ?? [];
+  const escalasFds = escalas?.filter((e) => e.tipo_escala === "fim_de_semana" || !e.tipo_escala) ?? [];
 
-  // Group gira escalas by date (already filtered to future only by query)
+  // Archived data
+  const escalasGiraPassadas = escalasPassadas?.filter((e) => e.tipo_escala === "gira") ?? [];
+  const escalasFdsPassadas = escalasPassadas?.filter((e) => e.tipo_escala === "fim_de_semana" || !e.tipo_escala) ?? [];
+
   const giraByDate = escalasGira.reduce<Record<string, typeof escalasGira>>((acc, e) => {
     if (!acc[e.data]) acc[e.data] = [];
     acc[e.data].push(e);
     return acc;
   }, {});
 
-  // Group cambones by evento - only show future giras
+  const giraByDatePassadas = escalasGiraPassadas.reduce<Record<string, typeof escalasGiraPassadas>>((acc, e) => {
+    if (!acc[e.data]) acc[e.data] = [];
+    acc[e.data].push(e);
+    return acc;
+  }, {});
+
   const futureGiraIds = new Set(giras?.map((g) => g.id) ?? []);
+  const allGiraMap = new Map((allGiras ?? giras ?? []).map((g) => [g.id, g]));
 
   const cambonesByEvento = (cambones ?? []).reduce<Record<string, typeof cambones>>((acc, c) => {
     if (!futureGiraIds.has(c.evento_id)) return acc;
@@ -325,8 +369,24 @@ export default function Escalas() {
     return acc;
   }, {});
 
+  const cambonesByEventoPassados = (cambones ?? []).reduce<Record<string, typeof cambones>>((acc, c) => {
+    if (futureGiraIds.has(c.evento_id)) return acc;
+    if (!allGiraMap.has(c.evento_id)) return acc;
+    if (!acc[c.evento_id]) acc[c.evento_id] = [];
+    acc[c.evento_id].push(c);
+    return acc;
+  }, {});
+
   const funcoesByEvento = (funcoesGiraData ?? []).reduce<Record<string, typeof funcoesGiraData>>((acc, f) => {
     if (!futureGiraIds.has(f.evento_id)) return acc;
+    if (!acc[f.evento_id]) acc[f.evento_id] = [];
+    acc[f.evento_id].push(f);
+    return acc;
+  }, {});
+
+  const funcoesByEventoPassados = (funcoesGiraData ?? []).reduce<Record<string, typeof funcoesGiraData>>((acc, f) => {
+    if (futureGiraIds.has(f.evento_id)) return acc;
+    if (!allGiraMap.has(f.evento_id)) return acc;
     if (!acc[f.evento_id]) acc[f.evento_id] = [];
     acc[f.evento_id].push(f);
     return acc;
@@ -480,6 +540,35 @@ export default function Escalas() {
               {escalasGira.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma escala de gira cadastrada</p>}
             </div>
           )}
+
+          {/* Archived gira escalas */}
+          {(isAdmin || canManageEscalas) && Object.keys(giraByDatePassadas).length > 0 && (
+            <Collapsible className="mt-6">
+              <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full py-2">
+                <Archive className="w-3 h-3" />
+                <span>Escalas passadas ({Object.keys(giraByDatePassadas).length})</span>
+                <ChevronDown className="w-3 h-3 ml-auto" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-2">
+                {Object.entries(giraByDatePassadas).map(([data, items]) => (
+                  <Card key={data} className="bg-card border-border opacity-60">
+                    <CardContent className="p-3">
+                      <p className="font-display font-semibold text-xs">{format(new Date(data + "T00:00:00"), "dd 'de' MMMM, EEEE", { locale: ptBR })}</p>
+                      {items[0]?.descricao && <p className="text-xs text-muted-foreground">{items[0].descricao}</p>}
+                      <div className="space-y-1 mt-1">
+                        {items.map((e) => (
+                          <div key={e.id} className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{funcoesGira.find((f) => f.value === e.funcao)?.label || e.funcao}</span>
+                            <span>{e.responsaveis.map((uid) => getNome(uid)).join(", ")}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </TabsContent>
 
         {/* ========== FIM DE SEMANA ========== */}
@@ -564,6 +653,26 @@ export default function Escalas() {
               })}
               {escalasFds.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma escala de fim de semana</p>}
             </div>
+          )}
+
+          {(isAdmin || canManageEscalas) && escalasFdsPassadas.length > 0 && (
+            <Collapsible className="mt-6">
+              <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full py-2">
+                <Archive className="w-3 h-3" />
+                <span>Escalas passadas ({escalasFdsPassadas.length})</span>
+                <ChevronDown className="w-3 h-3 ml-auto" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 mt-2">
+                {escalasFdsPassadas.map((e) => (
+                  <Card key={e.id} className="bg-card border-border opacity-60">
+                    <CardContent className="p-3">
+                      <p className="font-display font-semibold text-xs">{format(new Date(e.data + "T00:00:00"), "dd 'de' MMMM, EEEE", { locale: ptBR })}</p>
+                      <p className="text-xs text-muted-foreground">{e.responsaveis.map((uid) => getNome(uid)).join(", ")}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
           )}
         </TabsContent>
 
@@ -680,6 +789,39 @@ export default function Escalas() {
             })}
             {Object.keys(cambonesByEvento).length === 0 && <p className="text-center text-muted-foreground py-8">Nenhum cambone escalado</p>}
           </div>
+
+          {(isAdmin || canManageEscalas) && Object.keys(cambonesByEventoPassados).length > 0 && (
+            <Collapsible className="mt-6">
+              <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full py-2">
+                <Archive className="w-3 h-3" />
+                <span>Cambones passados ({Object.keys(cambonesByEventoPassados).length} giras)</span>
+                <ChevronDown className="w-3 h-3 ml-auto" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-2">
+                {Object.entries(cambonesByEventoPassados).map(([eventoId, items]) => {
+                  const gira = allGiraMap.get(eventoId);
+                  if (!gira) return null;
+                  return (
+                    <Card key={eventoId} className="bg-card border-border opacity-60">
+                      <CardContent className="p-3">
+                        <p className="font-display font-semibold text-xs">{gira.titulo}</p>
+                        <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                        <div className="space-y-1 mt-1">
+                          {items!.map((c) => (
+                            <div key={c.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{getNome(c.medium_user_id)}</span>
+                              <span>→</span>
+                              <span>{getNome(c.cambone_user_id)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </TabsContent>
 
         {/* ========== DEMAIS FUNÇÕES ========== */}
@@ -784,6 +926,41 @@ export default function Escalas() {
             })}
             {Object.keys(funcoesByEvento).length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma função escalada</p>}
           </div>
+
+          {(isAdmin || canManageEscalas) && Object.keys(funcoesByEventoPassados).length > 0 && (
+            <Collapsible className="mt-6">
+              <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full py-2">
+                <Archive className="w-3 h-3" />
+                <span>Funções passadas ({Object.keys(funcoesByEventoPassados).length} giras)</span>
+                <ChevronDown className="w-3 h-3 ml-auto" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-2">
+                {Object.entries(funcoesByEventoPassados).map(([eventoId, items]) => {
+                  const gira = allGiraMap.get(eventoId);
+                  if (!gira) return null;
+                  return (
+                    <Card key={eventoId} className="bg-card border-border opacity-60">
+                      <CardContent className="p-3">
+                        <p className="font-display font-semibold text-xs">{gira.titulo}</p>
+                        <p className="text-xs text-muted-foreground">{format(new Date(gira.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                        <div className="space-y-1 mt-1">
+                          {items!.map((f) => {
+                            const funcLabel = demaisFuncoes.find((df) => df.value === f.funcao)?.label || f.funcao;
+                            return (
+                              <div key={f.id} className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>{funcLabel}</span>
+                                <span>{getNome(f.user_id)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign, Users, Shield } from "lucide-react";
+import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign, Users, Shield, Package } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
@@ -280,6 +280,10 @@ export default function Dashboard() {
         <Link to="/calendario" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
           <Calendar className="w-5 h-5 text-accent" />
           <span className="text-sm font-medium">Calendário</span>
+        </Link>
+        <Link to="/reposicao" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors col-span-2">
+          <Package className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">Reposição</span>
         </Link>
       </div>
     </div>

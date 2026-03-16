@@ -14,7 +14,7 @@ import Calendario from "./pages/Calendario";
 import Escalas from "./pages/Escalas";
 import Avisos from "./pages/Avisos";
 import Estudos from "./pages/Estudos";
-
+import Reposicao from "./pages/Reposicao";
 import Financeiro from "./pages/Financeiro";
 import Perfil from "./pages/Perfil";
 import AdminMembros from "./pages/AdminMembros";
@@ -31,7 +31,7 @@ const AppRoutes = () => (
     <Route path="/escalas" element={<ProtectedRoute><AppLayout><Escalas /></AppLayout></ProtectedRoute>} />
     <Route path="/avisos" element={<ProtectedRoute><AppLayout><Avisos /></AppLayout></ProtectedRoute>} />
     <Route path="/estudos" element={<ProtectedRoute><AppLayout><Estudos /></AppLayout></ProtectedRoute>} />
-    
+    <Route path="/reposicao" element={<ProtectedRoute><AppLayout><Reposicao /></AppLayout></ProtectedRoute>} />
     <Route path="/financeiro" element={<ProtectedRoute><AppLayout><Financeiro /></AppLayout></ProtectedRoute>} />
     <Route path="/perfil" element={<ProtectedRoute><AppLayout><Perfil /></AppLayout></ProtectedRoute>} />
     <Route path="/admin/membros" element={<ProtectedRoute><AdminRoute><AppLayout><AdminMembros /></AppLayout></AdminRoute></ProtectedRoute>} />
