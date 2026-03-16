@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign, Users, Shield } from "lucide-react";
+import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign, Users, Shield, Package } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
