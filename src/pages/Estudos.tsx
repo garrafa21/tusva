@@ -617,6 +617,7 @@ export default function Estudos() {
                 <DialogHeader>
                   <DialogTitle className="font-display">Editar Entidade</DialogTitle>
                   <DialogDescription>Altere os dados da entidade</DialogDescription>
+                </DialogHeader>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
