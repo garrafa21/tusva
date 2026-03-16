@@ -34,7 +34,8 @@ const funcoesLimpezaLabel: Record<string, string> = {
 };
 
 export default function Avisos() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, canManageEscalas, user } = useAuth();
+  const canSeeReads = isAdmin || canManageEscalas;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);

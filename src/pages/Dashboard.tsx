@@ -281,6 +281,10 @@ export default function Dashboard() {
           <Calendar className="w-5 h-5 text-accent" />
           <span className="text-sm font-medium">Calendário</span>
         </Link>
+        <Link to="/reposicao" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors col-span-2">
+          <Package className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">Reposição</span>
+        </Link>
       </div>
     </div>
   );
