@@ -222,8 +222,8 @@ export default function Calendario() {
                     </span>
                   </div>
 
-                  {/* Admin: show who confirmed */}
-                  {isAdmin && confs.length > 0 && (
+                  {/* Admin/Cambone Chefe: show who confirmed */}
+                  {(isAdmin || canManageEscalas) && confs.length > 0 && (
                     <button
                       onClick={() => setShowPresenca(showPresenca === e.id ? null : e.id)}
                       className="text-xs text-primary hover:underline flex items-center gap-1"
