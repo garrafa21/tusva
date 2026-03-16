@@ -654,6 +654,26 @@ export default function Escalas() {
               {escalasFds.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma escala de fim de semana</p>}
             </div>
           )}
+
+          {(isAdmin || canManageEscalas) && escalasFdsPassadas.length > 0 && (
+            <Collapsible className="mt-6">
+              <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full py-2">
+                <Archive className="w-3 h-3" />
+                <span>Escalas passadas ({escalasFdsPassadas.length})</span>
+                <ChevronDown className="w-3 h-3 ml-auto" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 mt-2">
+                {escalasFdsPassadas.map((e) => (
+                  <Card key={e.id} className="bg-card border-border opacity-60">
+                    <CardContent className="p-3">
+                      <p className="font-display font-semibold text-xs">{format(new Date(e.data + "T00:00:00"), "dd 'de' MMMM, EEEE", { locale: ptBR })}</p>
+                      <p className="text-xs text-muted-foreground">{e.responsaveis.map((uid) => getNome(uid)).join(", ")}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </TabsContent>
 
         {/* ========== CAMBONES ========== */}
