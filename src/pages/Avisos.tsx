@@ -327,7 +327,7 @@ export default function Avisos() {
                     </div>
                   </div>
 
-                  {isAdmin && (
+                  {canSeeReads && (
                     <div className="mt-4 border-t border-border pt-3 space-y-2">
                       <div className="flex flex-wrap gap-2 text-xs">
                         <span className="rounded-full bg-primary/10 px-2 py-1 text-primary">Leram: {quemLeu.length}</span>
