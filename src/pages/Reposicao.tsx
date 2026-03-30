@@ -478,8 +478,8 @@ export default function Reposicao() {
                     </div>
                   )}
 
-                  {/* Admin/Cambone Chefe: show who voted */}
-                  {canManage && itemRespostas.length > 0 && (
+                  {/* Show who voted to everyone */}
+                  {itemRespostas.length > 0 && (
                     <div className="mt-1.5 pl-1">
                       <div className="flex flex-wrap gap-1">
                         {itemRespostas.map((r) => (

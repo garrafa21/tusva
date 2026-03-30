@@ -43,7 +43,13 @@ export default function Avisos() {
   const { data: avisos, isLoading } = useQuery({
     queryKey: ["avisos"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("avisos").select("*").order("created_at", { ascending: false });
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const { data, error } = await supabase
+        .from("avisos")
+        .select("*")
+        .gte("created_at", thirtyDaysAgo.toISOString())
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },

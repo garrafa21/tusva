@@ -701,7 +701,7 @@ export default function Estudos() {
                                     {(ent as any).elementos && <p><span className="text-foreground font-medium">Elementos:</span> {(ent as any).elementos}</p>}
                                     {ent.descricao && <p><span className="text-foreground font-medium">Detalhes:</span> {ent.descricao}</p>}
 
-                                    {isAdmin && (
+                                    {(isAdmin || ent.medium_user_id === user?.id) && (
                                       <div className="pt-1 flex gap-1">
                                         <Button
                                           size="sm"

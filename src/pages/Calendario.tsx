@@ -197,8 +197,8 @@ export default function Calendario() {
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(new Date(e.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
               </div>
 
-              {/* Presence confirmation for giras */}
-              {isGira && !isPast && (
+              {/* Presence confirmation for all events */}
+              {!isPast && (
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Button
