@@ -560,7 +560,7 @@ export default function Estudos() {
 
       {tab === "entidades" && (
         <>
-          {isAdmin && (
+          {user && (
             <div className="flex justify-end mb-4">
               <Dialog open={openEntidade} onOpenChange={setOpenEntidade}>
                 <DialogTrigger asChild>
@@ -580,17 +580,21 @@ export default function Estudos() {
                     }}
                     className="space-y-3"
                   >
-                    <div>
-                      <Label>Médium</Label>
-                      <Select name="medium_user_id" required>
-                        <SelectTrigger className="bg-secondary">
-                          <SelectValue placeholder="Selecione o filho médium" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {membrosOrdenados.map((m) => <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {isAdmin ? (
+                      <div>
+                        <Label>Médium</Label>
+                        <Select name="medium_user_id" required>
+                          <SelectTrigger className="bg-secondary">
+                            <SelectValue placeholder="Selecione o filho médium" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {membrosOrdenados.map((m) => <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <input type="hidden" name="medium_user_id" value={user?.id ?? ""} />
+                    )}
                     <div>
                       <Label>Linha</Label>
                       <Select name="categoria" defaultValue="Caboclo">
@@ -611,7 +615,7 @@ export default function Estudos() {
             </div>
           )}
 
-          {isAdmin && editingEntidade && (
+          {editingEntidade && (
             <Dialog open={!!editingEntidade} onOpenChange={(openValue) => !openValue && setEditingEntidade(null)}>
               <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto pb-8">
                 <DialogHeader>
@@ -701,7 +705,7 @@ export default function Estudos() {
                                     {(ent as any).elementos && <p><span className="text-foreground font-medium">Elementos:</span> {(ent as any).elementos}</p>}
                                     {ent.descricao && <p><span className="text-foreground font-medium">Detalhes:</span> {ent.descricao}</p>}
 
-                                    {isAdmin && (
+                                    {(isAdmin || ent.medium_user_id === user?.id) && (
                                       <div className="pt-1 flex gap-1">
                                         <Button
                                           size="sm"
