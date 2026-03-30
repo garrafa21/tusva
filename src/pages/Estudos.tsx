@@ -28,6 +28,7 @@ const linhaEmoji: Record<string, string> = {
   Cigano: "🔮",
   Malandro: "🎩",
   Exu: "🔥",
+  Pombagira: "🌹",
 };
 
 type Tab = "estudos" | "entidades";
