@@ -165,13 +165,16 @@ export default function Escalas() {
     return new Set(vals);
   }, [funcoesAssignments]);
 
-  const handleGiraAssignment = (funcao: string, value: string) => {
+  const handleGiraAssignment = (funcao: string, index: number, value: string) => {
     setGiraAssignments((prev) => {
       const next = { ...prev };
-      if (value === BLANK_VALUE) {
+      const arr = [...(next[funcao] || ["", ""])];
+      arr[index] = value === BLANK_VALUE ? "" : value;
+      const filtered = arr.filter(Boolean);
+      if (filtered.length === 0) {
         delete next[funcao];
       } else {
-        next[funcao] = value;
+        next[funcao] = arr;
       }
       return next;
     });
