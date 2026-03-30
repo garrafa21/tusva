@@ -198,15 +198,15 @@ export default function Escalas() {
       if (!selectedGiraId) throw new Error("Selecione uma gira");
       const gira = giras?.find((g) => g.id === selectedGiraId);
       if (!gira) throw new Error("Gira não encontrada");
-      const entries = Object.entries(giraAssignments).filter(([, v]) => v && v !== BLANK_VALUE);
+      const entries = Object.entries(giraAssignments).filter(([, arr]) => arr.some(v => v && v !== BLANK_VALUE));
       if (entries.length === 0) throw new Error("Selecione pelo menos um responsável");
 
       const dataStr = gira.data_inicio.split("T")[0];
-      const inserts = entries.map(([funcao, userId]) => ({
+      const inserts = entries.map(([funcao, userIds]) => ({
         data: dataStr,
         tipo_escala: "gira",
         funcao,
-        responsaveis: [userId],
+        responsaveis: userIds.filter(v => v && v !== BLANK_VALUE),
         criado_por: user?.id,
         descricao: gira.titulo,
       }));
