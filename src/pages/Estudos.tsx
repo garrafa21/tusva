@@ -611,7 +611,7 @@ export default function Estudos() {
             </div>
           )}
 
-          {isAdmin && editingEntidade && (
+          {editingEntidade && (
             <Dialog open={!!editingEntidade} onOpenChange={(openValue) => !openValue && setEditingEntidade(null)}>
               <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto pb-8">
                 <DialogHeader>
