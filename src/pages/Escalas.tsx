@@ -53,7 +53,7 @@ export default function Escalas() {
   const [openFuncoes, setOpenFuncoes] = useState(false);
 
   const [selectedGiraId, setSelectedGiraId] = useState("");
-  const [giraAssignments, setGiraAssignments] = useState<Record<string, string>>({});
+  const [giraAssignments, setGiraAssignments] = useState<Record<string, string[]>>({});
   const [fdsMembers, setFdsMembers] = useState<string[]>([]);
 
   const [camboneGiraId, setCamboneGiraId] = useState("");
