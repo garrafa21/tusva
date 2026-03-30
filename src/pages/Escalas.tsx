@@ -460,23 +460,36 @@ export default function Escalas() {
                     <>
                       <Label>Atribuir funções</Label>
                       {funcoesGira.map((f) => {
-                        const currentValue = giraAssignments[f.value] || "";
-                        const availableMembers = membros?.filter(
-                          (m) => m.user_id === currentValue || !usedGiraUserIds.has(m.user_id)
-                        ) ?? [];
-
+                        const currentArr = giraAssignments[f.value] || ["", ""];
                         return (
-                          <div key={f.value} className="flex items-center gap-2">
-                            <span className="text-sm w-28 shrink-0">{f.label}</span>
-                            <Select value={currentValue || BLANK_VALUE} onValueChange={(v) => handleGiraAssignment(f.value, v)}>
-                              <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value={BLANK_VALUE}>— Nenhum —</SelectItem>
-                                {availableMembers.map((m) => (
-                                  <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          <div key={f.value} className="space-y-1">
+                            <span className="text-sm font-medium">{f.label}</span>
+                            <div className="flex gap-2">
+                              {[0, 1].map((idx) => {
+                                const currentValue = currentArr[idx] || "";
+                                const otherValue = currentArr[idx === 0 ? 1 : 0] || "";
+                                const availableMembers = membros?.filter(
+                                  (m) => m.user_id === currentValue || (!usedGiraUserIds.has(m.user_id) || m.user_id === otherValue ? false : true) ? (m.user_id === currentValue || !usedGiraUserIds.has(m.user_id)) : true
+                                ) ?? [];
+                                // Simpler: show members not used elsewhere (except current slot)
+                                const filtered = membros?.filter((m) => {
+                                  if (m.user_id === currentValue) return true;
+                                  if (m.user_id === otherValue) return false;
+                                  return !usedGiraUserIds.has(m.user_id);
+                                }) ?? [];
+                                return (
+                                  <Select key={idx} value={currentValue || BLANK_VALUE} onValueChange={(v) => handleGiraAssignment(f.value, idx, v)}>
+                                    <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder={idx === 0 ? "Pessoa 1" : "Pessoa 2 (opcional)"} /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={BLANK_VALUE}>— Nenhum —</SelectItem>
+                                      {filtered.map((m) => (
+                                        <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       })}

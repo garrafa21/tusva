@@ -117,7 +117,8 @@ export default function Estudos() {
     const clean = normalize(name);
     if (clean === normalize("Mãe Gabi") || clean === normalize("Mae Gabi") || clean === normalize("admin")) return 0;
     if (clean === normalize("Tathiane")) return 1;
-    return 2;
+    if (clean === normalize("Rafinha")) return 2;
+    return 3;
   };
 
   const compareMediumIds = (aId: string, bId: string) => {
