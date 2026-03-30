@@ -155,7 +155,7 @@ export default function Escalas() {
 
   // Compute used user IDs for gira limpeza (prevent duplicates)
   const usedGiraUserIds = useMemo(() => {
-    const vals = Object.values(giraAssignments).filter((v) => v && v !== BLANK_VALUE);
+    const vals = Object.values(giraAssignments).flat().filter((v) => v && v !== BLANK_VALUE);
     return new Set(vals);
   }, [giraAssignments]);
 
