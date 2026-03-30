@@ -31,6 +31,7 @@ const demaisFuncoes = [
   { value: "senha_chamar", label: "📢 Senha (Chamar Consulente)" },
   { value: "senha_direcionar", label: "👉 Senha (Direcionar Consulente)" },
   { value: "apoio_conga", label: "🕯️ Apoio Congá" },
+  { value: "criancas", label: "👶 Crianças" },
 ];
 
 const linhaLabel: Record<string, string> = {
