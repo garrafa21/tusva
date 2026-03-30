@@ -580,17 +580,21 @@ export default function Estudos() {
                     }}
                     className="space-y-3"
                   >
-                    <div>
-                      <Label>Médium</Label>
-                      <Select name="medium_user_id" required>
-                        <SelectTrigger className="bg-secondary">
-                          <SelectValue placeholder="Selecione o filho médium" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {membrosOrdenados.map((m) => <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {isAdmin ? (
+                      <div>
+                        <Label>Médium</Label>
+                        <Select name="medium_user_id" required>
+                          <SelectTrigger className="bg-secondary">
+                            <SelectValue placeholder="Selecione o filho médium" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {membrosOrdenados.map((m) => <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <input type="hidden" name="medium_user_id" value={user?.id ?? ""} />
+                    )}
                     <div>
                       <Label>Linha</Label>
                       <Select name="categoria" defaultValue="Caboclo">
