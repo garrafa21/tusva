@@ -31,6 +31,7 @@ const demaisFuncoes = [
   { value: "senha_chamar", label: "📢 Senha (Chamar Consulente)" },
   { value: "senha_direcionar", label: "👉 Senha (Direcionar Consulente)" },
   { value: "apoio_conga", label: "🕯️ Apoio Congá" },
+  { value: "criancas", label: "👶 Crianças" },
 ];
 
 const linhaLabel: Record<string, string> = {
@@ -52,7 +53,7 @@ export default function Escalas() {
   const [openFuncoes, setOpenFuncoes] = useState(false);
 
   const [selectedGiraId, setSelectedGiraId] = useState("");
-  const [giraAssignments, setGiraAssignments] = useState<Record<string, string>>({});
+  const [giraAssignments, setGiraAssignments] = useState<Record<string, string[]>>({});
   const [fdsMembers, setFdsMembers] = useState<string[]>([]);
 
   const [camboneGiraId, setCamboneGiraId] = useState("");
@@ -154,7 +155,7 @@ export default function Escalas() {
 
   // Compute used user IDs for gira limpeza (prevent duplicates)
   const usedGiraUserIds = useMemo(() => {
-    const vals = Object.values(giraAssignments).filter((v) => v && v !== BLANK_VALUE);
+    const vals = Object.values(giraAssignments).flat().filter((v) => v && v !== BLANK_VALUE);
     return new Set(vals);
   }, [giraAssignments]);
 
@@ -164,13 +165,16 @@ export default function Escalas() {
     return new Set(vals);
   }, [funcoesAssignments]);
 
-  const handleGiraAssignment = (funcao: string, value: string) => {
+  const handleGiraAssignment = (funcao: string, index: number, value: string) => {
     setGiraAssignments((prev) => {
       const next = { ...prev };
-      if (value === BLANK_VALUE) {
+      const arr = [...(next[funcao] || ["", ""])];
+      arr[index] = value === BLANK_VALUE ? "" : value;
+      const filtered = arr.filter(Boolean);
+      if (filtered.length === 0) {
         delete next[funcao];
       } else {
-        next[funcao] = value;
+        next[funcao] = arr;
       }
       return next;
     });
@@ -194,15 +198,15 @@ export default function Escalas() {
       if (!selectedGiraId) throw new Error("Selecione uma gira");
       const gira = giras?.find((g) => g.id === selectedGiraId);
       if (!gira) throw new Error("Gira não encontrada");
-      const entries = Object.entries(giraAssignments).filter(([, v]) => v && v !== BLANK_VALUE);
+      const entries = Object.entries(giraAssignments).filter(([, arr]) => arr.some(v => v && v !== BLANK_VALUE));
       if (entries.length === 0) throw new Error("Selecione pelo menos um responsável");
 
       const dataStr = gira.data_inicio.split("T")[0];
-      const inserts = entries.map(([funcao, userId]) => ({
+      const inserts = entries.map(([funcao, userIds]) => ({
         data: dataStr,
         tipo_escala: "gira",
         funcao,
-        responsaveis: [userId],
+        responsaveis: userIds.filter(v => v && v !== BLANK_VALUE),
         criado_por: user?.id,
         descricao: gira.titulo,
       }));
@@ -456,23 +460,36 @@ export default function Escalas() {
                     <>
                       <Label>Atribuir funções</Label>
                       {funcoesGira.map((f) => {
-                        const currentValue = giraAssignments[f.value] || "";
-                        const availableMembers = membros?.filter(
-                          (m) => m.user_id === currentValue || !usedGiraUserIds.has(m.user_id)
-                        ) ?? [];
-
+                        const currentArr = giraAssignments[f.value] || ["", ""];
                         return (
-                          <div key={f.value} className="flex items-center gap-2">
-                            <span className="text-sm w-28 shrink-0">{f.label}</span>
-                            <Select value={currentValue || BLANK_VALUE} onValueChange={(v) => handleGiraAssignment(f.value, v)}>
-                              <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value={BLANK_VALUE}>— Nenhum —</SelectItem>
-                                {availableMembers.map((m) => (
-                                  <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          <div key={f.value} className="space-y-1">
+                            <span className="text-sm font-medium">{f.label}</span>
+                            <div className="flex gap-2">
+                              {[0, 1].map((idx) => {
+                                const currentValue = currentArr[idx] || "";
+                                const otherValue = currentArr[idx === 0 ? 1 : 0] || "";
+                                const availableMembers = membros?.filter(
+                                  (m) => m.user_id === currentValue || (!usedGiraUserIds.has(m.user_id) || m.user_id === otherValue ? false : true) ? (m.user_id === currentValue || !usedGiraUserIds.has(m.user_id)) : true
+                                ) ?? [];
+                                // Simpler: show members not used elsewhere (except current slot)
+                                const filtered = membros?.filter((m) => {
+                                  if (m.user_id === currentValue) return true;
+                                  if (m.user_id === otherValue) return false;
+                                  return !usedGiraUserIds.has(m.user_id);
+                                }) ?? [];
+                                return (
+                                  <Select key={idx} value={currentValue || BLANK_VALUE} onValueChange={(v) => handleGiraAssignment(f.value, idx, v)}>
+                                    <SelectTrigger className="bg-secondary flex-1"><SelectValue placeholder={idx === 0 ? "Pessoa 1" : "Pessoa 2 (opcional)"} /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={BLANK_VALUE}>— Nenhum —</SelectItem>
+                                      {filtered.map((m) => (
+                                        <SelectItem key={m.user_id} value={m.user_id}>{m.nome_espiritual || m.nome}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       })}

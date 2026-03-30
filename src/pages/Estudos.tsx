@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const LINHAS = ["Caboclo", "Preto Velho", "Erê", "Baiano", "Marinheiro", "Boiadeiro", "Cigano", "Malandro", "Exu"];
+const LINHAS = ["Caboclo", "Preto Velho", "Erê", "Baiano", "Marinheiro", "Boiadeiro", "Cigano", "Malandro", "Exu", "Pombagira"];
 
 const linhaEmoji: Record<string, string> = {
   Caboclo: "🪶",
@@ -28,6 +28,7 @@ const linhaEmoji: Record<string, string> = {
   Cigano: "🔮",
   Malandro: "🎩",
   Exu: "🔥",
+  Pombagira: "🌹",
 };
 
 type Tab = "estudos" | "entidades";
@@ -116,7 +117,8 @@ export default function Estudos() {
     const clean = normalize(name);
     if (clean === normalize("Mãe Gabi") || clean === normalize("Mae Gabi") || clean === normalize("admin")) return 0;
     if (clean === normalize("Tathiane")) return 1;
-    return 2;
+    if (clean === normalize("Rafinha")) return 2;
+    return 3;
   };
 
   const compareMediumIds = (aId: string, bId: string) => {
