@@ -560,7 +560,7 @@ export default function Estudos() {
 
       {tab === "entidades" && (
         <>
-          {isAdmin && (
+          {user && (
             <div className="flex justify-end mb-4">
               <Dialog open={openEntidade} onOpenChange={setOpenEntidade}>
                 <DialogTrigger asChild>
