@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const LINHAS = ["Caboclo", "Preto Velho", "Erê", "Baiano", "Marinheiro", "Boiadeiro", "Cigano", "Malandro", "Exu"];
+const LINHAS = ["Caboclo", "Preto Velho", "Erê", "Baiano", "Marinheiro", "Boiadeiro", "Cigano", "Malandro", "Exu", "Pombagira"];
 
 const linhaEmoji: Record<string, string> = {
   Caboclo: "🪶",
