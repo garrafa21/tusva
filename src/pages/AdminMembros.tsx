@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, UserCheck, Shield, Trash2 } from "lucide-react";
+import { Users, Plus, UserCheck, Shield, Trash2, KeyRound } from "lucide-react";
 
 type CategoriaMembro = "admin" | "escala" | "membro";
 
@@ -161,6 +161,26 @@ export default function AdminMembros() {
                 <span className={`text-xs px-2 py-0.5 rounded-full ${categoriaMeta[m.categoria].badgeClass}`}>
                   {categoriaMeta[m.categoria].label}
                 </span>
+                <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-primary shrink-0"
+                  title="Trocar senha"
+                  onClick={async () => {
+                    const novaSenha = prompt(`Nova senha para ${m.nome} (mín. 6 caracteres):`);
+                    if (!novaSenha) return;
+                    if (novaSenha.length < 6) {
+                      toast({ title: "Senha muito curta", description: "Mínimo 6 caracteres", variant: "destructive" });
+                      return;
+                    }
+                    const res = await supabase.functions.invoke("admin-reset-password", {
+                      body: { user_id: m.user_id, nova_senha: novaSenha },
+                    });
+                    if (res.error || res.data?.error) {
+                      toast({ title: "Erro ao trocar senha", description: res.data?.error || res.error?.message, variant: "destructive" });
+                      return;
+                    }
+                    toast({ title: "Senha alterada!", description: `Nova senha de ${m.nome} foi definida.` });
+                  }}>
+                  <KeyRound className="w-4 h-4" />
+                </Button>
                 {!m.isAdmin && m.user_id !== user?.id && (
                   <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive shrink-0"
                     onClick={() => { if (confirm(`Remover ${m.nome}?`)) deleteMembro.mutate(m.user_id); }}>

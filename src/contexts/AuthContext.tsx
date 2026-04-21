@@ -117,6 +117,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true;
     let requestId = 0;
 
+    // Safety: never stay in loading forever (e.g. flaky network)
+    const loadingTimeout = setTimeout(() => {
+      if (isMounted) setIsLoading(false);
+    }, 8000);
+
     const applySession = async (nextSession: Session | null) => {
       const currentRequestId = ++requestId;
 
@@ -150,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (isMounted && currentRequestId === requestId) {
         setIsLoading(false);
+        clearTimeout(loadingTimeout);
       }
     };
 
@@ -169,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       isMounted = false;
+      clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
   }, []);
