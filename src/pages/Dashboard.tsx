@@ -255,6 +255,16 @@ export default function Dashboard() {
   const eventDate = proximoEvento ? new Date(proximoEvento.data_inicio) : null;
   const countdown = useCountdown(eventDate);
 
+  // Carousel de aniversariantes
+  const [aniversIndex, setAniversIndex] = useState(0);
+  useEffect(() => {
+    if (aniversariantesMes.length <= 1) return;
+    const t = setInterval(() => {
+      setAniversIndex((i) => (i + 1) % aniversariantesMes.length);
+    }, 4000);
+    return () => clearInterval(t);
+  }, [aniversariantesMes.length]);
+
   if (authLoading) return <DashboardSkeleton />;
 
   return (
