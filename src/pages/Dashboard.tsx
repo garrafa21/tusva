@@ -1,21 +1,36 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ClipboardList, Bell, BookOpen, AlertTriangle, Star, DollarSign, Users, Shield, Package } from "lucide-react";
-import { format } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Calendar,
+  ClipboardList,
+  Bell,
+  BookOpen,
+  AlertTriangle,
+  Star,
+  DollarSign,
+  Users,
+  Shield,
+  Package,
+  HandHeart,
+  Cake,
+  Sparkles,
+} from "lucide-react";
+import { format, differenceInSeconds } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { linhaInfo } from "@/lib/linhaColors";
+import { UserAvatar } from "@/components/UserAvatar";
+import { DashboardSkeleton } from "@/components/skeletons/LoadingSkeleton";
 
-const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", caboclos: "🪶 Caboclos", pretos_velhos: "🕯️ Pretos Velhos", eres: "🍭 Erês", baianos: "🌴 Baianos", marinheiros: "⚓ Marinheiros", boiadeiros: "🐂 Boiadeiros", ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda", outro: "Evento" };
-
-const linhaCor: Record<string, string> = {
-  caboclos: "bg-emerald-500/20 text-emerald-700", pretos_velhos: "bg-amber-500/20 text-amber-700",
-  eres: "bg-pink-500/20 text-pink-600", baianos: "bg-orange-500/20 text-orange-600",
-  marinheiros: "bg-cyan-500/20 text-cyan-700", boiadeiros: "bg-yellow-500/20 text-yellow-700",
-  ciganos: "bg-purple-500/20 text-purple-600", malandragem: "bg-slate-500/20 text-slate-600",
-  esquerda: "bg-red-500/20 text-red-600",
+const tipoLabel: Record<string, string> = {
+  gira: "Gira",
+  festa: "Festa",
+  reuniao: "Reunião",
+  desenvolvimento: "Desenvolvimento",
+  outro: "Evento",
 };
 
 const demaisFuncoesLabel: Record<string, string> = {
@@ -38,12 +53,40 @@ function startOfLocalDayIso() {
   return d.toISOString();
 }
 
+function getSaudacao() {
+  const h = new Date().getHours();
+  if (h < 6) return { texto: "Boa madrugada", emoji: "🌙" };
+  if (h < 12) return { texto: "Bom dia", emoji: "☀️" };
+  if (h < 18) return { texto: "Boa tarde", emoji: "🌤️" };
+  return { texto: "Boa noite", emoji: "🌙" };
+}
+
+function useCountdown(target?: Date | null) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    if (!target) return;
+    const t = setInterval(() => setNow(new Date()), 1000 * 30);
+    return () => clearInterval(t);
+  }, [target?.getTime()]);
+
+  if (!target) return null;
+  const total = differenceInSeconds(target, now);
+  if (total <= 0) return { texto: "É hoje! ✨", isNow: true };
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  if (days > 0) return { texto: `Faltam ${days}d ${hours}h`, isNow: false };
+  if (hours > 0) return { texto: `Faltam ${hours}h ${minutes}min`, isNow: false };
+  return { texto: `Faltam ${minutes} minutos`, isNow: true };
+}
+
 export default function Dashboard() {
-  const { profile, isAdmin, user } = useAuth();
+  const { profile, isAdmin, user, isLoading: authLoading } = useAuth();
   const todayLocal = toLocalDateString(new Date());
   const todayStartIso = startOfLocalDayIso();
+  const saudacao = getSaudacao();
 
-  const { data: proximoEvento } = useQuery({
+  const { data: proximoEvento, isLoading: loadingEvento } = useQuery({
     queryKey: ["proximo-evento", todayStartIso],
     queryFn: async () => {
       const { data } = await supabase
@@ -83,7 +126,9 @@ export default function Dashboard() {
   const { data: membros } = useQuery({
     queryKey: ["membros-dash"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("user_id, nome, nome_espiritual");
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, nome, nome_espiritual, avatar_url, data_nascimento");
       return data ?? [];
     },
     enabled: !!user,
@@ -121,13 +166,27 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  const getNome = (userId: string) => {
-    const m = membros?.find((p) => p.user_id === userId);
+  const { data: firmezasAtivas } = useQuery({
+    queryKey: ["dashboard-firmezas"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("prayer_requests")
+        .select("id")
+        .gte("expires_at", new Date().toISOString());
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const getMembro = (id: string) => membros?.find((m) => m.user_id === id);
+  const getNome = (id: string) => {
+    const m = getMembro(id);
     return m?.nome_espiritual || m?.nome || "Médium";
   };
 
   const avisosAtribuicoes = useMemo(() => {
-    if (!user || !girasAbertas) return [] as { id: string; text: string; when: Date; kind: "cambone" | "funcao" }[];
+    if (!user || !girasAbertas)
+      return [] as { id: string; text: string; when: Date; kind: "cambone" | "funcao" }[];
 
     const byEvento = new Map(girasAbertas.map((g) => [g.id, g]));
     const cards: { id: string; text: string; when: Date; kind: "cambone" | "funcao" }[] = [];
@@ -157,89 +216,215 @@ export default function Dashboard() {
     return cards.sort((a, b) => a.when.getTime() - b.when.getTime());
   }, [user, girasAbertas, meusCambones, minhasFuncoes, membros]);
 
+  const aniversariantesMes = useMemo(() => {
+    if (!membros) return [];
+    const mesAtual = new Date().getMonth();
+    const hoje = new Date().getDate();
+    return (membros ?? [])
+      .filter((m: any) => m.data_nascimento)
+      .map((m: any) => {
+        const [, mm, dd] = (m.data_nascimento as string).split("-").map(Number);
+        return { ...m, mes: mm - 1, dia: dd };
+      })
+      .filter((m) => m.mes === mesAtual)
+      .sort((a, b) => {
+        const aFut = a.dia >= hoje ? 0 : 1;
+        const bFut = b.dia >= hoje ? 0 : 1;
+        if (aFut !== bFut) return aFut - bFut;
+        return a.dia - b.dia;
+      });
+  }, [membros]);
+
   const totalAvisosDashboard = (avisosNaoLidos?.length ?? 0) + avisosAtribuicoes.length;
 
+  const linha = (proximoEvento as any)?.linha as string | null;
+  const linhaCfg = linhaInfo(linha);
+  const eventDate = proximoEvento ? new Date(proximoEvento.data_inicio) : null;
+  const countdown = useCountdown(eventDate);
+
+  if (authLoading) return <DashboardSkeleton />;
+
   return (
-    <div className="p-4 max-w-2xl mx-auto space-y-4">
-      <div className="flex items-center gap-3 mb-6">
-        <img src="/logo-tusva.jpg" alt="TUSVA" className="w-12 h-12 rounded-full object-cover shadow-md shadow-primary/20" loading="eager" />
-        <div>
-          <h1 className="font-display text-lg font-semibold">
-            Axé, {profile?.nome_espiritual || profile?.nome}!
+    <div className="p-4 max-w-2xl mx-auto space-y-4 animate-fade-in-up">
+      {/* Saudação */}
+      <div className="flex items-center gap-3 mb-2">
+        <UserAvatar
+          name={profile?.nome}
+          src={profile?.avatar_url}
+          size="lg"
+          ring={isAdmin ? "gold" : "vinho"}
+        />
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-lg sm:text-xl font-semibold leading-tight">
+            {saudacao.texto}, {profile?.nome_espiritual || profile?.nome} {saudacao.emoji}
           </h1>
-          <p className="text-xs text-muted-foreground">
-            {isAdmin && <span className="text-gold font-medium">✦ Administrador(a) </span>}
-            Bem-vindo(a) ao TUSVA
+          <p className="text-[11px] text-muted-foreground tracking-wide uppercase mt-0.5">
+            {isAdmin && <span className="text-gold font-semibold">✦ Mãe/Pai de Santo · </span>}
+            Salve Iansã!
           </p>
         </div>
       </div>
 
-      <Link to="/calendario">
-        <Card className="bg-card border-border hover:border-primary/40 transition-colors">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <Calendar className="w-4 h-4 text-primary" />
-              Próximo Evento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {proximoEvento ? (
-              <div>
-                <p className="font-display text-base font-semibold">{proximoEvento.titulo}</p>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                    {tipoLabel[proximoEvento.tipo] ?? proximoEvento.tipo}
-                  </span>
-                  {(proximoEvento as any).linha && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${linhaCor[(proximoEvento as any).linha] ?? "bg-secondary text-muted-foreground"}`}>
-                      {tipoLabel[(proximoEvento as any).linha] ?? (proximoEvento as any).linha}
+      {/* Próximo Evento — HERO */}
+      {loadingEvento ? (
+        <div className="h-44 rounded-xl bg-gradient-to-r from-secondary via-muted to-secondary bg-[length:1000px_100%] animate-shimmer" />
+      ) : proximoEvento ? (
+        <Link to="/calendario" className="block group">
+          <Card className="overflow-hidden border-0 shadow-elegant hover-lift relative">
+            {/* Background gradient da linha */}
+            <div className={`absolute inset-0 ${linhaCfg.gradient} opacity-95`} />
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-white/10" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gold/30 blur-3xl" />
+
+            <CardContent className="relative p-5 text-white">
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-3.5 h-3.5 opacity-80" />
+                <span className="text-[10px] tracking-[0.25em] uppercase opacity-90">Próximo evento</span>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <span className="text-4xl drop-shadow-md">{linhaCfg.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-display text-2xl font-bold leading-tight drop-shadow-sm">
+                    {proximoEvento.titulo}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm font-medium">
+                      {tipoLabel[proximoEvento.tipo] ?? proximoEvento.tipo}
                     </span>
+                    {linha && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm font-medium">
+                        {linhaCfg.label}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm mt-2 opacity-95">
+                    {format(eventDate!, "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                  {countdown && (
+                    <div
+                      className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-gold text-vinho font-semibold text-sm shadow-md ${
+                        countdown.isNow ? "animate-pulse-gold" : ""
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {countdown.texto}
+                    </div>
                   )}
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(proximoEvento.data_inicio), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                  </span>
                 </div>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nenhum evento agendado</p>
-            )}
+            </CardContent>
+          </Card>
+        </Link>
+      ) : (
+        <Card className="bg-card border-border shadow-card gold-hairline">
+          <CardContent className="p-6 text-center">
+            <Calendar className="w-8 h-8 mx-auto text-muted-foreground/40 mb-2" />
+            <p className="text-sm text-muted-foreground">Nenhum evento agendado</p>
           </CardContent>
         </Card>
-      </Link>
+      )}
 
-      <Link to="/avisos">
-        <Card className="bg-card border-border hover:border-gold/40 transition-colors mt-4">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+      {/* Atalhos rápidos */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {[
+          { to: "/avisos", icon: Bell, label: "Avisos", count: totalAvisosDashboard, color: "text-gold" },
+          { to: "/firmezas", icon: HandHeart, label: "Firmezas", count: firmezasAtivas?.length ?? 0, color: "text-primary" },
+          { to: "/escalas", icon: ClipboardList, label: "Escalas", count: 0, color: "text-primary" },
+          { to: "/financeiro", icon: DollarSign, label: "Financeiro", count: 0, color: "text-gold" },
+          { to: "/estudos", icon: BookOpen, label: "Estudos", count: 0, color: "text-primary" },
+          { to: "/reposicao", icon: Package, label: "Reposição", count: 0, color: "text-gold" },
+        ].map((s, i) => (
+          <Link
+            key={s.to}
+            to={s.to}
+            className="group relative bg-card border border-border rounded-xl p-3 shadow-card hover-lift gold-hairline overflow-hidden animate-fade-in-up"
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
+            <div className="flex flex-col items-start gap-1.5">
+              <div className={`w-8 h-8 rounded-full bg-gradient-gold/10 flex items-center justify-center ${s.color}`}>
+                <s.icon className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-semibold leading-tight">{s.label}</span>
+            </div>
+            {s.count > 0 && (
+              <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-gradient-vinho text-white flex items-center justify-center shadow-md">
+                {s.count}
+              </span>
+            )}
+          </Link>
+        ))}
+      </div>
+
+      {/* Aniversariantes do mês */}
+      {aniversariantesMes.length > 0 && (
+        <Card className="bg-card border-border shadow-card gold-hairline overflow-hidden animate-fade-in-up">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-gold flex items-center justify-center">
+                <Cake className="w-4 h-4 text-vinho" />
+              </div>
+              <div>
+                <h3 className="font-display font-semibold text-sm">Aniversariantes do mês</h3>
+                <p className="text-[11px] text-muted-foreground">Salve a vida dos irmãos! 🎉</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {aniversariantesMes.map((m: any) => (
+                <div key={m.user_id} className="flex items-center gap-2.5">
+                  <UserAvatar name={m.nome_espiritual || m.nome} src={m.avatar_url} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{m.nome_espiritual || m.nome}</p>
+                  </div>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold-foreground border border-gold/30 font-semibold">
+                    Dia {String(m.dia).padStart(2, "0")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Avisos */}
+      <Link to="/avisos" className="block">
+        <Card className="bg-card border-border shadow-card hover-lift gold-hairline">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
               <Bell className="w-4 h-4 text-gold" />
-              Avisos
+              <span className="font-display text-sm font-semibold">Avisos</span>
               {totalAvisosDashboard > 0 && (
-                <span className="ml-auto text-xs bg-gold text-gold-foreground px-2 py-0.5 rounded-full font-bold">
+                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-gradient-vinho text-white font-bold">
                   {totalAvisosDashboard} novo(s)
                 </span>
               )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </div>
             {avisosAtribuicoes.length > 0 && (
               <div className="space-y-2 mb-2">
                 {avisosAtribuicoes.slice(0, 3).map((item) => (
                   <div key={item.id} className="flex items-start gap-2">
-                    {item.kind === "cambone" ? <Users className="w-4 h-4 text-primary mt-0.5 shrink-0" /> : <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />}
+                    {item.kind === "cambone" ? (
+                      <Users className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    ) : (
+                      <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    )}
                     <div>
                       <p className="text-sm font-medium">{item.text}</p>
-                      <p className="text-xs text-muted-foreground">{format(item.when, "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {format(item.when, "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-
             {avisosNaoLidos && avisosNaoLidos.length > 0 ? (
               <div className="space-y-2">
                 {avisosNaoLidos.map((a) => (
                   <div key={a.id} className="flex items-start gap-2">
-                    {a.prioridade === "urgente" && <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />}
+                    {a.prioridade === "urgente" && (
+                      <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                    )}
                     {a.prioridade === "importante" && <Star className="w-4 h-4 text-gold mt-0.5 shrink-0" />}
                     <div>
                       <p className="text-sm font-medium">{a.titulo}</p>
@@ -255,19 +440,22 @@ export default function Dashboard() {
         </Card>
       </Link>
 
-      <Link to="/escalas">
-        <Card className="bg-card border-border hover:border-primary/40 transition-colors mt-4">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+      {/* Minha próxima limpeza */}
+      <Link to="/escalas" className="block">
+        <Card className="bg-card border-border shadow-card hover-lift gold-hairline">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
               <ClipboardList className="w-4 h-4 text-primary" />
-              Minha Próxima Limpeza
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+              <span className="font-display text-sm font-semibold">Minha Próxima Limpeza</span>
+            </div>
             {minhaEscala ? (
               <p className="text-sm">
-                <span className="font-medium">{format(new Date(minhaEscala.data + "T00:00:00"), "dd 'de' MMMM", { locale: ptBR })}</span>
-                {minhaEscala.descricao && <span className="text-muted-foreground"> — {minhaEscala.descricao}</span>}
+                <span className="font-medium">
+                  {format(new Date(minhaEscala.data + "T00:00:00"), "dd 'de' MMMM", { locale: ptBR })}
+                </span>
+                {minhaEscala.descricao && (
+                  <span className="text-muted-foreground"> — {minhaEscala.descricao}</span>
+                )}
                 {minhaEscala.funcao && <span className="text-muted-foreground"> ({minhaEscala.funcao})</span>}
               </p>
             ) : (
@@ -276,29 +464,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </Link>
-
-      <div className="grid grid-cols-2 gap-3 mt-4">
-        <Link to="/estudos" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-          <BookOpen className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Estudos</span>
-        </Link>
-        <Link to="/financeiro" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-          <DollarSign className="w-5 h-5 text-accent" />
-          <span className="text-sm font-medium">Financeiro</span>
-        </Link>
-        <Link to="/escalas" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-          <ClipboardList className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Escalas</span>
-        </Link>
-        <Link to="/calendario" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-          <Calendar className="w-5 h-5 text-accent" />
-          <span className="text-sm font-medium">Calendário</span>
-        </Link>
-        <Link to="/reposicao" className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors col-span-2">
-          <Package className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Reposição</span>
-        </Link>
-      </div>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { BookOpen, Plus, ArrowLeft, Trash2, ChevronDown, Pencil } from "lucide-react";
+import { ErvasBanhosTab } from "@/components/ErvasBanhosTab";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -31,7 +32,9 @@ const linhaEmoji: Record<string, string> = {
   Pombagira: "🌹",
 };
 
-type Tab = "estudos" | "entidades";
+type Tab = "estudos" | "entidades" | "ervas";
+
+const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 type CategoriaEdicao = { id: string; nome: string; descricao: string | null };
 type EntidadeEdicao = {
@@ -368,17 +371,25 @@ export default function Estudos() {
       <div className="flex gap-1 mb-4 bg-secondary rounded-lg p-1">
         <button
           onClick={() => setTab("estudos")}
-          className={`flex-1 text-sm py-2 rounded-md transition-colors font-medium ${tab === "estudos" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+          className={`flex-1 text-xs sm:text-sm py-2 rounded-md transition-all font-medium ${tab === "estudos" ? "bg-card text-foreground shadow-card" : "text-muted-foreground"}`}
         >
           📚 Estudos
         </button>
         <button
           onClick={() => setTab("entidades")}
-          className={`flex-1 text-sm py-2 rounded-md transition-colors font-medium ${tab === "entidades" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+          className={`flex-1 text-xs sm:text-sm py-2 rounded-md transition-all font-medium ${tab === "entidades" ? "bg-card text-foreground shadow-card" : "text-muted-foreground"}`}
         >
           ✨ Entidades
         </button>
+        <button
+          onClick={() => setTab("ervas")}
+          className={`flex-1 text-xs sm:text-sm py-2 rounded-md transition-all font-medium ${tab === "ervas" ? "bg-card text-foreground shadow-card" : "text-muted-foreground"}`}
+        >
+          🌿 Banhos
+        </button>
       </div>
+
+      {tab === "ervas" && <ErvasBanhosTab isAdmin={isAdmin} />}
 
       {tab === "estudos" && (
         <>
