@@ -71,7 +71,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   <User className="w-4 h-4 text-primary" />
                 )}
               </div>
-              <span className="text-xs text-muted-foreground hidden sm:inline">{profile?.nome?.split(" ")[0]}</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{profile?.nome}</span>
             </Link>
             <button onClick={signOut} className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors">
               <LogOut className="w-4 h-4" />

@@ -321,7 +321,7 @@ export default function Escalas() {
 
   const getNome = (id: string) => {
     const m = membros?.find((m) => m.user_id === id);
-    return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
+    return m?.nome_espiritual || m?.nome || "?";
   };
 
   const getAvatar = (id: string) => {

@@ -79,6 +79,17 @@ serve(async (req) => {
       });
     }
 
+    // Remove other subscriptions for the same device (same user + same user_agent)
+    // to avoid duplicate notifications when a device re-subscribes with a new endpoint.
+    if (body.userAgent) {
+      await supabaseAdmin
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", userId)
+        .eq("user_agent", body.userAgent)
+        .neq("endpoint", endpoint);
+    }
+
     const { error } = await supabaseAdmin.from("push_subscriptions").upsert(
       {
         endpoint,

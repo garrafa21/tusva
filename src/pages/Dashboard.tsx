@@ -115,7 +115,7 @@ export default function Dashboard() {
 
   const getNome = (userId: string) => {
     const m = membros?.find((p) => p.user_id === userId);
-    return m?.nome_espiritual || m?.nome?.split(" ")[0] || "Médium";
+    return m?.nome_espiritual || m?.nome || "Médium";
   };
 
   const avisosAtribuicoes = useMemo(() => {
@@ -157,7 +157,7 @@ export default function Dashboard() {
         <img src="/logo-tusva.jpg" alt="TUSVA" className="w-12 h-12 rounded-full object-cover shadow-md shadow-primary/20" loading="eager" />
         <div>
           <h1 className="font-display text-lg font-semibold">
-            Axé, {profile?.nome_espiritual || profile?.nome?.split(" ")[0]}!
+            Axé, {profile?.nome_espiritual || profile?.nome}!
           </h1>
           <p className="text-xs text-muted-foreground">
             {isAdmin && <span className="text-gold font-medium">✦ Administrador(a) </span>}
@@ -178,10 +178,15 @@ export default function Dashboard() {
             {proximoEvento ? (
               <div>
                 <p className="font-display text-base font-semibold">{proximoEvento.titulo}</p>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
                     {tipoLabel[proximoEvento.tipo] ?? proximoEvento.tipo}
                   </span>
+                  {(proximoEvento as any).linha && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                      {tipoLabel[(proximoEvento as any).linha] ?? (proximoEvento as any).linha}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(proximoEvento.data_inicio), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                   </span>
