@@ -170,8 +170,10 @@ export type Database = {
           created_at: string
           descricao: string | null
           dia_semana: number | null
+          evento_id: string | null
           finalidade: string | null
           id: string
+          imagem_url: string | null
           linha: string | null
           titulo: string
         }
@@ -179,8 +181,10 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           dia_semana?: number | null
+          evento_id?: string | null
           finalidade?: string | null
           id?: string
+          imagem_url?: string | null
           linha?: string | null
           titulo: string
         }
@@ -188,8 +192,10 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           dia_semana?: number | null
+          evento_id?: string | null
           finalidade?: string | null
           id?: string
+          imagem_url?: string | null
           linha?: string | null
           titulo?: string
         }
