@@ -31,6 +31,7 @@ export default function Perfil() {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(profile?.nome ?? "");
+  const [dataNasc, setDataNasc] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
@@ -53,7 +54,12 @@ export default function Perfil() {
 
   useEffect(() => {
     setNome(profile?.nome ?? "");
-  }, [profile?.nome]);
+    if (user) {
+      supabase.from("profiles").select("data_nascimento").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+        if (data?.data_nascimento) setDataNasc(data.data_nascimento);
+      });
+    }
+  }, [profile?.nome, user?.id]);
 
   useEffect(() => {
     setNotificationsEnabled(typeof Notification !== "undefined" && Notification.permission === "granted");
@@ -107,7 +113,10 @@ export default function Perfil() {
     if (!user) return;
 
     setLoading(true);
-    const { error } = await supabase.from("profiles").update({ nome }).eq("user_id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ nome, data_nascimento: dataNasc || null })
+      .eq("user_id", user.id);
     setLoading(false);
 
     if (error) {
@@ -226,6 +235,11 @@ export default function Perfil() {
               <Label>Nome</Label>
               <Input value={nome} onChange={(e) => setNome(e.target.value)} required className="bg-secondary" />
               <p className="text-xs text-muted-foreground mt-1">Esse campo é apenas nome de exibição. Seu login não muda.</p>
+            </div>
+            <div>
+              <Label>Data de nascimento 🎂</Label>
+              <Input type="date" value={dataNasc} onChange={(e) => setDataNasc(e.target.value)} className="bg-secondary" />
+              <p className="text-xs text-muted-foreground mt-1">Para aparecer nos aniversariantes do mês.</p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
           </form>
