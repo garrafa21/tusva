@@ -2,99 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 240 10% 15%;
+    /* === TUSVA — Identidade Iansã Balé (claro) === */
+    --background: 36 38% 97%;             /* branco quente */
+    --foreground: 350 25% 12%;            /* vinho profundo p/ texto */
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 15%;
+    --card-foreground: 350 25% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 15%;
+    --popover-foreground: 350 25% 12%;
 
-    --primary: 270 55% 50%;
-    --primary-foreground: 0 0% 100%;
+    /* Vinho profundo — cor de Iansã/força */
+    --primary: 350 70% 32%;
+    --primary-foreground: 36 38% 97%;
+    --primary-glow: 350 75% 45%;
 
-    --secondary: 270 10% 94%;
-    --secondary-foreground: 240 10% 15%;
+    --secondary: 36 25% 92%;
+    --secondary-foreground: 350 25% 18%;
 
-    --muted: 270 8% 92%;
-    --muted-foreground: 240 5% 46%;
+    --muted: 36 20% 90%;
+    --muted-foreground: 350 8% 38%;
 
-    --accent: 42 80% 50%;
-    --accent-foreground: 0 0% 100%;
+    /* Dourado — acento nobre */
+    --accent: 42 78% 48%;
+    --accent-foreground: 350 30% 12%;
+    --accent-glow: 45 90% 60%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 75% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 8% 88%;
-    --input: 270 8% 88%;
-    --ring: 270 55% 50%;
+    --border: 36 18% 86%;
+    --input: 36 18% 86%;
+    --ring: 350 70% 32%;
 
-    --radius: 0.75rem;
+    --radius: 0.85rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 10% 15%;
-    --sidebar-primary: 270 55% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 10% 94%;
-    --sidebar-accent-foreground: 240 10% 15%;
-    --sidebar-border: 270 8% 90%;
-    --sidebar-ring: 270 55% 50%;
+    --sidebar-foreground: 350 25% 12%;
+    --sidebar-primary: 350 70% 32%;
+    --sidebar-primary-foreground: 36 38% 97%;
+    --sidebar-accent: 36 25% 92%;
+    --sidebar-accent-foreground: 350 25% 18%;
+    --sidebar-border: 36 18% 88%;
+    --sidebar-ring: 350 70% 32%;
 
-    --gold: 42 80% 50%;
-    --gold-foreground: 0 0% 100%;
+    --gold: 42 78% 48%;
+    --gold-foreground: 350 30% 12%;
+
+    --vinho: 350 70% 32%;
+    --vinho-foreground: 36 38% 97%;
 
     --cambone: 208 88% 45%;
     --cambone-foreground: 0 0% 100%;
+
+    /* === Gradientes da identidade === */
+    --gradient-tusva: linear-gradient(135deg, hsl(350 70% 32%) 0%, hsl(350 65% 22%) 50%, hsl(42 78% 48%) 130%);
+    --gradient-iansa: linear-gradient(135deg, hsl(36 38% 99%) 0%, hsl(350 70% 32%) 100%);
+    --gradient-vinho: linear-gradient(135deg, hsl(350 70% 35%) 0%, hsl(350 75% 22%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(42 80% 55%) 0%, hsl(38 80% 42%) 100%);
+    --gradient-dawn: linear-gradient(180deg, hsl(36 50% 98%) 0%, hsl(36 30% 94%) 100%);
+
+    /* === Gradientes por linha espiritual === */
+    --gradient-caboclos: linear-gradient(135deg, hsl(140 55% 38%), hsl(150 60% 28%));
+    --gradient-eres: linear-gradient(135deg, hsl(330 80% 70%), hsl(200 75% 65%));
+    --gradient-pretos-velhos: linear-gradient(135deg, hsl(0 0% 96%), hsl(0 0% 18%));
+    --gradient-baianos: linear-gradient(135deg, hsl(50 95% 55%), hsl(40 25% 18%));
+    --gradient-marinheiros: linear-gradient(135deg, hsl(195 75% 70%), hsl(0 0% 100%));
+    --gradient-boiadeiros: linear-gradient(135deg, hsl(28 55% 38%), hsl(20 45% 25%));
+    --gradient-ciganos: linear-gradient(135deg, hsl(20 90% 55%), hsl(330 70% 55%), hsl(50 85% 55%));
+    --gradient-malandros: linear-gradient(135deg, hsl(355 75% 45%), hsl(0 0% 100%));
+    --gradient-esquerda: linear-gradient(135deg, hsl(0 0% 10%), hsl(355 80% 38%));
+
+    /* === Sombras === */
+    --shadow-card: 0 2px 14px -4px hsl(350 30% 20% / 0.08), 0 1px 3px hsl(350 30% 20% / 0.06);
+    --shadow-elegant: 0 12px 40px -12px hsl(350 50% 20% / 0.18), 0 4px 12px -4px hsl(350 30% 15% / 0.1);
+    --shadow-glow-gold: 0 0 0 1px hsl(42 80% 55% / 0.35), 0 8px 28px -6px hsl(42 80% 50% / 0.45);
+    --shadow-glow-vinho: 0 0 0 1px hsl(350 70% 38% / 0.3), 0 10px 32px -6px hsl(350 70% 32% / 0.35);
+
+    --transition-elegant: 350ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .dark {
-    --background: 270 15% 8%;
-    --foreground: 40 20% 92%;
+    --background: 350 18% 7%;
+    --foreground: 36 35% 95%;
 
-    --card: 270 12% 12%;
-    --card-foreground: 40 20% 92%;
+    --card: 350 18% 11%;
+    --card-foreground: 36 35% 95%;
 
-    --popover: 270 12% 12%;
-    --popover-foreground: 40 20% 92%;
+    --popover: 350 18% 11%;
+    --popover-foreground: 36 35% 95%;
 
-    --primary: 270 60% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 350 75% 55%;
+    --primary-foreground: 350 18% 7%;
+    --primary-glow: 350 80% 65%;
 
-    --secondary: 270 10% 18%;
-    --secondary-foreground: 40 20% 92%;
+    --secondary: 350 15% 16%;
+    --secondary-foreground: 36 35% 95%;
 
-    --muted: 270 8% 16%;
-    --muted-foreground: 270 5% 55%;
+    --muted: 350 12% 14%;
+    --muted-foreground: 36 10% 65%;
 
-    --accent: 42 80% 55%;
-    --accent-foreground: 270 15% 8%;
+    --accent: 42 85% 60%;
+    --accent-foreground: 350 18% 7%;
+    --accent-glow: 45 95% 70%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 10% 20%;
-    --input: 270 10% 20%;
-    --ring: 270 60% 55%;
+    --border: 350 12% 18%;
+    --input: 350 12% 18%;
+    --ring: 350 75% 55%;
 
-    --sidebar-background: 270 12% 10%;
-    --sidebar-foreground: 40 20% 92%;
-    --sidebar-primary: 270 60% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 10% 16%;
-    --sidebar-accent-foreground: 40 20% 92%;
-    --sidebar-border: 270 10% 18%;
-    --sidebar-ring: 270 60% 55%;
+    --sidebar-background: 350 18% 9%;
+    --sidebar-foreground: 36 35% 95%;
+    --sidebar-primary: 350 75% 55%;
+    --sidebar-primary-foreground: 350 18% 7%;
+    --sidebar-accent: 350 15% 14%;
+    --sidebar-accent-foreground: 36 35% 95%;
+    --sidebar-border: 350 12% 16%;
+    --sidebar-ring: 350 75% 55%;
 
-    --gold: 42 80% 55%;
-    --gold-foreground: 270 15% 8%;
+    --gold: 42 85% 60%;
+    --gold-foreground: 350 18% 7%;
+
+    --vinho: 350 75% 55%;
+    --vinho-foreground: 350 18% 7%;
 
     --cambone: 206 92% 62%;
     --cambone-foreground: 226 18% 12%;
+
+    --gradient-tusva: linear-gradient(135deg, hsl(350 70% 22%) 0%, hsl(350 75% 38%) 60%, hsl(42 85% 55%) 130%);
+    --gradient-iansa: linear-gradient(135deg, hsl(350 18% 11%) 0%, hsl(350 70% 32%) 100%);
+    --gradient-vinho: linear-gradient(135deg, hsl(350 70% 28%) 0%, hsl(350 80% 18%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(42 85% 60%) 0%, hsl(38 85% 42%) 100%);
+    --gradient-dawn: linear-gradient(180deg, hsl(350 18% 9%) 0%, hsl(350 18% 7%) 100%);
+
+    --shadow-card: 0 2px 14px -4px hsl(0 0% 0% / 0.45), 0 1px 3px hsl(0 0% 0% / 0.25);
+    --shadow-elegant: 0 14px 40px -12px hsl(0 0% 0% / 0.6), 0 4px 12px -4px hsl(0 0% 0% / 0.3);
+    --shadow-glow-gold: 0 0 0 1px hsl(42 85% 60% / 0.4), 0 8px 28px -6px hsl(42 85% 55% / 0.55);
+    --shadow-glow-vinho: 0 0 0 1px hsl(350 75% 55% / 0.4), 0 10px 32px -6px hsl(350 75% 50% / 0.5);
   }
 }
 
@@ -106,11 +156,13 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Montserrat', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -118,5 +170,74 @@
   .font-display {
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  .font-serif-display {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .bg-gradient-tusva { background: var(--gradient-tusva); }
+  .bg-gradient-vinho { background: var(--gradient-vinho); }
+  .bg-gradient-gold { background: var(--gradient-gold); }
+  .bg-gradient-iansa { background: var(--gradient-iansa); }
+  .bg-gradient-dawn { background: var(--gradient-dawn); }
+
+  .bg-linha-caboclos { background: var(--gradient-caboclos); }
+  .bg-linha-eres { background: var(--gradient-eres); }
+  .bg-linha-pretos-velhos { background: var(--gradient-pretos-velhos); }
+  .bg-linha-baianos { background: var(--gradient-baianos); }
+  .bg-linha-marinheiros { background: var(--gradient-marinheiros); }
+  .bg-linha-boiadeiros { background: var(--gradient-boiadeiros); }
+  .bg-linha-ciganos { background: var(--gradient-ciganos); }
+  .bg-linha-malandros { background: var(--gradient-malandros); }
+  .bg-linha-esquerda { background: var(--gradient-esquerda); }
+
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+  .shadow-glow-gold { box-shadow: var(--shadow-glow-gold); }
+  .shadow-glow-vinho { box-shadow: var(--shadow-glow-vinho); }
+
+  .transition-elegant { transition: all var(--transition-elegant); }
+
+  /* Hairline dourado — "fio de ouro" sutil em cards */
+  .gold-hairline {
+    position: relative;
+  }
+  .gold-hairline::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--gold) / 0.55), transparent 40%, transparent 60%, hsl(var(--gold) / 0.35));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .text-gradient-vinho {
+    background: var(--gradient-vinho);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+  }
+
+  .hover-lift {
+    transition: transform var(--transition-elegant), box-shadow var(--transition-elegant);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elegant);
   }
 }
