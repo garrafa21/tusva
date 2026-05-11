@@ -180,7 +180,7 @@ export default function Avisos() {
 
   const getNome = (id: string) => {
     const m = membros?.find((membro) => membro.user_id === id);
-    return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
+    return m?.nome_espiritual || m?.nome || "?";
   };
 
   const personalCards: { tipo: string; texto: string; giraTitle: string; giraDate: Date; icon: "cambone" | "funcao" | "limpeza" }[] = [];

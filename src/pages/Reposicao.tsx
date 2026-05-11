@@ -102,7 +102,7 @@ export default function Reposicao() {
 
   const getNome = (id: string) => {
     const m = membros?.find((p) => p.user_id === id);
-    return m?.nome_espiritual || m?.nome?.split(" ")[0] || "?";
+    return m?.nome_espiritual || m?.nome || "?";
   };
 
   const getProfile = (id: string) => membros?.find((p) => p.user_id === id);

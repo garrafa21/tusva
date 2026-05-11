@@ -115,7 +115,7 @@ export default function Dashboard() {
 
   const getNome = (userId: string) => {
     const m = membros?.find((p) => p.user_id === userId);
-    return m?.nome_espiritual || m?.nome?.split(" ")[0] || "Médium";
+    return m?.nome_espiritual || m?.nome || "Médium";
   };
 
   const avisosAtribuicoes = useMemo(() => {
