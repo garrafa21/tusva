@@ -320,6 +320,12 @@ export default function Dashboard() {
                         {linhaCfg.label}
                       </span>
                     )}
+                    {(banhosDoEvento?.length ?? 0) > 0 && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-gold text-vinho font-semibold inline-flex items-center gap-1 shadow-sm">
+                        <Leaf className="w-3 h-3" />
+                        Banho disponível
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm mt-2 opacity-95">
                     {format(eventDate!, "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
