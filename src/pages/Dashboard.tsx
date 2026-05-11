@@ -10,6 +10,14 @@ import { Link } from "react-router-dom";
 
 const tipoLabel: Record<string, string> = { gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", caboclos: "🪶 Caboclos", pretos_velhos: "🕯️ Pretos Velhos", eres: "🍭 Erês", baianos: "🌴 Baianos", marinheiros: "⚓ Marinheiros", boiadeiros: "🐂 Boiadeiros", ciganos: "🔮 Ciganos", malandragem: "🎩 Malandragem", esquerda: "🔥 Esquerda", outro: "Evento" };
 
+const linhaCor: Record<string, string> = {
+  caboclos: "bg-emerald-500/20 text-emerald-700", pretos_velhos: "bg-amber-500/20 text-amber-700",
+  eres: "bg-pink-500/20 text-pink-600", baianos: "bg-orange-500/20 text-orange-600",
+  marinheiros: "bg-cyan-500/20 text-cyan-700", boiadeiros: "bg-yellow-500/20 text-yellow-700",
+  ciganos: "bg-purple-500/20 text-purple-600", malandragem: "bg-slate-500/20 text-slate-600",
+  esquerda: "bg-red-500/20 text-red-600",
+};
+
 const demaisFuncoesLabel: Record<string, string> = {
   porteira: "Porteira",
   senha_chamar: "Senha (Chamar Consulente)",
@@ -183,7 +191,7 @@ export default function Dashboard() {
                     {tipoLabel[proximoEvento.tipo] ?? proximoEvento.tipo}
                   </span>
                   {(proximoEvento as any).linha && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${linhaCor[(proximoEvento as any).linha] ?? "bg-secondary text-muted-foreground"}`}>
                       {tipoLabel[(proximoEvento as any).linha] ?? (proximoEvento as any).linha}
                     </span>
                   )}
