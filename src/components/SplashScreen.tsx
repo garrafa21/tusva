@@ -29,7 +29,7 @@ export function SplashScreen({ show }: { show: boolean }) {
           />
         </div>
         <p className="mt-6 font-display text-2xl tracking-widest text-gradient-vinho">TUSVA</p>
-        <p className="mt-1 text-xs text-muted-foreground tracking-[0.4em] uppercase">Salve Iansã</p>
+        <p className="mt-1 text-xs text-muted-foreground tracking-[0.4em] uppercase">Eparrey Iansã</p>
       </div>
     </div>
   );
