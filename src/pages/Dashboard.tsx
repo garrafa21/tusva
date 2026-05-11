@@ -398,19 +398,41 @@ export default function Dashboard() {
                 <p className="text-[11px] text-muted-foreground">Salve a vida dos irmãos! 🎉</p>
               </div>
             </div>
-            <div className="space-y-2">
-              {aniversariantesMes.map((m: any) => (
-                <div key={m.user_id} className="flex items-center gap-2.5">
-                  <UserAvatar name={m.nome_espiritual || m.nome} src={m.avatar_url} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{m.nome_espiritual || m.nome}</p>
+            <div className="relative h-12 overflow-hidden">
+              {aniversariantesMes.map((m: any, i: number) => {
+                const active = i === aniversIndex % aniversariantesMes.length;
+                return (
+                  <div
+                    key={m.user_id}
+                    className={`absolute inset-0 flex items-center gap-2.5 transition-all duration-500 ${
+                      active ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
+                    }`}
+                  >
+                    <UserAvatar name={m.nome_espiritual || m.nome} src={m.avatar_url} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{m.nome_espiritual || m.nome}</p>
+                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold-foreground border border-gold/30 font-semibold">
+                      Dia {String(m.dia).padStart(2, "0")}
+                    </span>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold-foreground border border-gold/30 font-semibold">
-                    Dia {String(m.dia).padStart(2, "0")}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
+            {aniversariantesMes.length > 1 && (
+              <div className="flex justify-center gap-1 mt-2">
+                {aniversariantesMes.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setAniversIndex(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === aniversIndex % aniversariantesMes.length ? "w-4 bg-gold" : "w-1.5 bg-muted-foreground/30"
+                    }`}
+                    aria-label={`Aniversariante ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
