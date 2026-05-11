@@ -179,6 +179,18 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: banhosDoEvento } = useQuery({
+    queryKey: ["banhos-do-evento", (proximoEvento as any)?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("ervas_banhos")
+        .select("id, titulo")
+        .eq("evento_id", (proximoEvento as any).id);
+      return data ?? [];
+    },
+    enabled: !!proximoEvento,
+  });
+
   const getMembro = (id: string) => membros?.find((m) => m.user_id === id);
   const getNome = (id: string) => {
     const m = getMembro(id);
