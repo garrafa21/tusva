@@ -165,6 +165,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ervas_banhos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          dia_semana: number | null
+          finalidade: string | null
+          id: string
+          linha: string | null
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          dia_semana?: number | null
+          finalidade?: string | null
+          id?: string
+          linha?: string | null
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          dia_semana?: number | null
+          finalidade?: string | null
+          id?: string
+          linha?: string | null
+          titulo?: string
+        }
+        Relationships: []
+      }
       escalas_limpeza: {
         Row: {
           created_at: string
@@ -385,11 +415,68 @@ export type Database = {
         }
         Relationships: []
       }
+      prayer_requests: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          expires_at: string
+          id: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          expires_at?: string
+          id?: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          expires_at?: string
+          id?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prayer_supports: {
+        Row: {
+          created_at: string
+          id: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_supports_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "prayer_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
           data_entrada: string | null
+          data_nascimento: string | null
           id: string
           nome: string
           nome_espiritual: string | null
@@ -401,6 +488,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           data_entrada?: string | null
+          data_nascimento?: string | null
           id?: string
           nome: string
           nome_espiritual?: string | null
@@ -412,6 +500,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           data_entrada?: string | null
+          data_nascimento?: string | null
           id?: string
           nome?: string
           nome_espiritual?: string | null
