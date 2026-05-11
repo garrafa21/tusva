@@ -191,7 +191,7 @@ export default function Dashboard() {
                     {tipoLabel[proximoEvento.tipo] ?? proximoEvento.tipo}
                   </span>
                   {(proximoEvento as any).linha && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${linhaCor[(proximoEvento as any).linha] ?? "bg-secondary text-muted-foreground"}`}>
                       {tipoLabel[(proximoEvento as any).linha] ?? (proximoEvento as any).linha}
                     </span>
                   )}
