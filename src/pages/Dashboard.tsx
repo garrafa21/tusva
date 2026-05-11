@@ -157,7 +157,7 @@ export default function Dashboard() {
         <img src="/logo-tusva.jpg" alt="TUSVA" className="w-12 h-12 rounded-full object-cover shadow-md shadow-primary/20" loading="eager" />
         <div>
           <h1 className="font-display text-lg font-semibold">
-            Axé, {profile?.nome_espiritual || profile?.nome?.split(" ")[0]}!
+            Axé, {profile?.nome_espiritual || profile?.nome}!
           </h1>
           <p className="text-xs text-muted-foreground">
             {isAdmin && <span className="text-gold font-medium">✦ Administrador(a) </span>}
