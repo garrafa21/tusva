@@ -259,8 +259,8 @@ export default function Dashboard() {
             {saudacao.texto}, {profile?.nome_espiritual || profile?.nome} {saudacao.emoji}
           </h1>
           <p className="text-[11px] text-muted-foreground tracking-wide uppercase mt-0.5">
-            {isAdmin && <span className="text-gold font-semibold">✦ Mãe/Pai de Santo · </span>}
-            Salve Iansã!
+            {isAdmin && <span className="text-gold font-semibold">✦ Mãe de Santo · </span>}
+            Eparrey Iansã!
           </p>
         </div>
       </div>
