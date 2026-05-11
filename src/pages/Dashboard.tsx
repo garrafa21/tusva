@@ -178,10 +178,15 @@ export default function Dashboard() {
             {proximoEvento ? (
               <div>
                 <p className="font-display text-base font-semibold">{proximoEvento.titulo}</p>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
                     {tipoLabel[proximoEvento.tipo] ?? proximoEvento.tipo}
                   </span>
+                  {(proximoEvento as any).linha && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                      {tipoLabel[(proximoEvento as any).linha] ?? (proximoEvento as any).linha}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(proximoEvento.data_inicio), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                   </span>
