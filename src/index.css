@@ -87,67 +87,91 @@
   }
 
   .dark {
-    /* Carvão profundo com leve toque vinho — elegante e legível */
-    --background: 350 12% 5%;
-    --foreground: 36 25% 94%;
+    /* Preto refinado com toque sutil de vinho — elegante, sem nuance marrom */
+    --background: 350 6% 4%;
+    --foreground: 36 30% 96%;
 
-    --card: 350 10% 9%;
-    --card-foreground: 36 25% 94%;
+    --card: 350 5% 8%;
+    --card-foreground: 36 30% 96%;
 
-    --popover: 350 10% 10%;
-    --popover-foreground: 36 25% 94%;
+    --popover: 350 5% 9%;
+    --popover-foreground: 36 30% 96%;
 
-    /* Vinho mais saturado e refinado, não rosado */
-    --primary: 350 72% 48%;
-    --primary-foreground: 36 30% 96%;
-    --primary-glow: 350 78% 58%;
+    /* Vinho vivo, profundo e legível */
+    --primary: 350 78% 52%;
+    --primary-foreground: 36 35% 98%;
+    --primary-glow: 350 82% 62%;
 
-    --secondary: 350 8% 13%;
-    --secondary-foreground: 36 25% 94%;
+    --secondary: 350 5% 12%;
+    --secondary-foreground: 36 30% 96%;
 
-    --muted: 350 8% 12%;
-    --muted-foreground: 36 12% 68%;
+    --muted: 350 5% 11%;
+    --muted-foreground: 36 14% 78%;
 
-    /* Dourado quente e nobre */
-    --accent: 42 80% 56%;
+    /* Dourado champagne — nobre, sem virar mostarda/marrom */
+    --accent: 44 88% 64%;
     --accent-foreground: 350 30% 8%;
-    --accent-glow: 45 90% 66%;
+    --accent-glow: 46 92% 72%;
 
-    --destructive: 0 70% 48%;
-    --destructive-foreground: 36 30% 96%;
+    --destructive: 0 72% 52%;
+    --destructive-foreground: 36 30% 98%;
 
-    --border: 350 8% 16%;
-    --input: 350 8% 15%;
-    --ring: 350 72% 48%;
+    --border: 350 5% 16%;
+    --input: 350 5% 14%;
+    --ring: 350 78% 52%;
 
-    --sidebar-background: 350 12% 6%;
-    --sidebar-foreground: 36 25% 94%;
-    --sidebar-primary: 350 72% 48%;
-    --sidebar-primary-foreground: 36 30% 96%;
-    --sidebar-accent: 350 8% 12%;
-    --sidebar-accent-foreground: 36 25% 94%;
-    --sidebar-border: 350 8% 14%;
-    --sidebar-ring: 350 72% 48%;
+    --sidebar-background: 350 6% 5%;
+    --sidebar-foreground: 36 30% 96%;
+    --sidebar-primary: 350 78% 52%;
+    --sidebar-primary-foreground: 36 35% 98%;
+    --sidebar-accent: 350 5% 11%;
+    --sidebar-accent-foreground: 36 30% 96%;
+    --sidebar-border: 350 5% 14%;
+    --sidebar-ring: 350 78% 52%;
 
-    --gold: 42 80% 56%;
+    --gold: 44 88% 64%;
     --gold-foreground: 350 30% 8%;
 
-    --vinho: 350 72% 48%;
-    --vinho-foreground: 36 30% 96%;
+    --vinho: 350 78% 52%;
+    --vinho-foreground: 36 35% 98%;
 
-    --cambone: 206 88% 58%;
+    --cambone: 206 88% 62%;
     --cambone-foreground: 226 18% 10%;
 
-    --gradient-tusva: linear-gradient(135deg, hsl(350 70% 18%) 0%, hsl(350 72% 32%) 55%, hsl(42 78% 50%) 130%);
-    --gradient-iansa: linear-gradient(135deg, hsl(350 12% 8%) 0%, hsl(350 72% 28%) 100%);
-    --gradient-vinho: linear-gradient(135deg, hsl(350 72% 30%) 0%, hsl(350 80% 14%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(42 82% 58%) 0%, hsl(38 82% 42%) 100%);
-    --gradient-dawn: linear-gradient(180deg, hsl(350 12% 7%) 0%, hsl(350 12% 5%) 100%);
+    --gradient-tusva: linear-gradient(135deg, hsl(350 75% 22%) 0%, hsl(350 78% 36%) 55%, hsl(44 85% 58%) 130%);
+    --gradient-iansa: linear-gradient(135deg, hsl(350 6% 6%) 0%, hsl(350 78% 32%) 100%);
+    --gradient-vinho: linear-gradient(135deg, hsl(350 78% 38%) 0%, hsl(350 85% 18%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(44 90% 66%) 0%, hsl(40 88% 50%) 100%);
+    --gradient-dawn: linear-gradient(180deg, hsl(350 6% 6%) 0%, hsl(350 6% 4%) 100%);
 
-    --shadow-card: 0 2px 14px -4px hsl(0 0% 0% / 0.55), 0 1px 3px hsl(0 0% 0% / 0.35);
-    --shadow-elegant: 0 18px 44px -12px hsl(0 0% 0% / 0.7), 0 4px 12px -4px hsl(0 0% 0% / 0.4);
-    --shadow-glow-gold: 0 0 0 1px hsl(42 80% 56% / 0.35), 0 8px 28px -6px hsl(42 80% 50% / 0.4);
-    --shadow-glow-vinho: 0 0 0 1px hsl(350 72% 48% / 0.35), 0 10px 32px -6px hsl(350 72% 42% / 0.4);
+    --shadow-card: 0 2px 14px -4px hsl(0 0% 0% / 0.6), 0 1px 3px hsl(0 0% 0% / 0.4);
+    --shadow-elegant: 0 18px 44px -12px hsl(0 0% 0% / 0.75), 0 4px 12px -4px hsl(0 0% 0% / 0.45);
+    --shadow-glow-gold: 0 0 0 1px hsl(44 88% 64% / 0.4), 0 8px 28px -6px hsl(44 85% 58% / 0.45);
+    --shadow-glow-vinho: 0 0 0 1px hsl(350 78% 52% / 0.4), 0 10px 32px -6px hsl(350 78% 46% / 0.45);
+  }
+
+  /* Dark — ajustes nos badges das linhas (mais legíveis, sem texto preto sumindo) */
+  .dark .bg-emerald-500\/15 { background-color: hsl(150 60% 45% / 0.2); }
+  .dark .bg-pink-500\/15 { background-color: hsl(330 80% 65% / 0.2); }
+  .dark .bg-yellow-500\/15 { background-color: hsl(50 95% 60% / 0.2); }
+  .dark .bg-sky-500\/15 { background-color: hsl(195 80% 62% / 0.2); }
+  .dark .bg-amber-700\/15 { background-color: hsl(28 65% 50% / 0.22); }
+  .dark .bg-orange-500\/15 { background-color: hsl(20 90% 58% / 0.2); }
+  .dark .bg-red-500\/15 { background-color: hsl(355 80% 58% / 0.2); }
+  .dark .bg-red-900\/15 { background-color: hsl(355 70% 42% / 0.25); }
+  .dark .bg-zinc-500\/15 { background-color: hsl(0 0% 75% / 0.18); }
+
+  /* Dark — gradiente dos Pretos Velhos: evita texto branco sumir no branco do gradient */
+  .dark .bg-linha-pretos-velhos {
+    background: linear-gradient(135deg, hsl(0 0% 25%), hsl(0 0% 8%));
+  }
+  /* Dark — Marinheiros: levemente reduzido para o texto azul-escuro continuar legível */
+  .dark .bg-linha-marinheiros {
+    background: linear-gradient(135deg, hsl(195 65% 62%), hsl(200 40% 78%));
+  }
+  /* Dark — Baianos: o texto preto fica preservado sobre amarelo */
+  .dark .bg-linha-baianos {
+    background: linear-gradient(135deg, hsl(50 92% 58%), hsl(40 30% 22%));
   }
 }
 
