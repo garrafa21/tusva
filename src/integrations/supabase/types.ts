@@ -289,6 +289,7 @@ export type Database = {
           data_inicio: string
           descricao: string | null
           id: string
+          last_reminder_sent_at: string | null
           linha: string | null
           local: string | null
           tipo: Database["public"]["Enums"]["tipo_evento"]
@@ -302,6 +303,7 @@ export type Database = {
           data_inicio: string
           descricao?: string | null
           id?: string
+          last_reminder_sent_at?: string | null
           linha?: string | null
           local?: string | null
           tipo?: Database["public"]["Enums"]["tipo_evento"]
@@ -315,6 +317,7 @@ export type Database = {
           data_inicio?: string
           descricao?: string | null
           id?: string
+          last_reminder_sent_at?: string | null
           linha?: string | null
           local?: string | null
           tipo?: Database["public"]["Enums"]["tipo_evento"]

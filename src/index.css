@@ -87,64 +87,67 @@
   }
 
   .dark {
-    --background: 350 18% 7%;
-    --foreground: 36 35% 95%;
+    /* Carvão profundo com leve toque vinho — elegante e legível */
+    --background: 350 12% 5%;
+    --foreground: 36 25% 94%;
 
-    --card: 350 18% 11%;
-    --card-foreground: 36 35% 95%;
+    --card: 350 10% 9%;
+    --card-foreground: 36 25% 94%;
 
-    --popover: 350 18% 11%;
-    --popover-foreground: 36 35% 95%;
+    --popover: 350 10% 10%;
+    --popover-foreground: 36 25% 94%;
 
-    --primary: 350 75% 55%;
-    --primary-foreground: 350 18% 7%;
-    --primary-glow: 350 80% 65%;
+    /* Vinho mais saturado e refinado, não rosado */
+    --primary: 350 72% 48%;
+    --primary-foreground: 36 30% 96%;
+    --primary-glow: 350 78% 58%;
 
-    --secondary: 350 15% 16%;
-    --secondary-foreground: 36 35% 95%;
+    --secondary: 350 8% 13%;
+    --secondary-foreground: 36 25% 94%;
 
-    --muted: 350 12% 14%;
-    --muted-foreground: 36 10% 65%;
+    --muted: 350 8% 12%;
+    --muted-foreground: 36 12% 68%;
 
-    --accent: 42 85% 60%;
-    --accent-foreground: 350 18% 7%;
-    --accent-glow: 45 95% 70%;
+    /* Dourado quente e nobre */
+    --accent: 42 80% 56%;
+    --accent-foreground: 350 30% 8%;
+    --accent-glow: 45 90% 66%;
 
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 70% 48%;
+    --destructive-foreground: 36 30% 96%;
 
-    --border: 350 12% 18%;
-    --input: 350 12% 18%;
-    --ring: 350 75% 55%;
+    --border: 350 8% 16%;
+    --input: 350 8% 15%;
+    --ring: 350 72% 48%;
 
-    --sidebar-background: 350 18% 9%;
-    --sidebar-foreground: 36 35% 95%;
-    --sidebar-primary: 350 75% 55%;
-    --sidebar-primary-foreground: 350 18% 7%;
-    --sidebar-accent: 350 15% 14%;
-    --sidebar-accent-foreground: 36 35% 95%;
-    --sidebar-border: 350 12% 16%;
-    --sidebar-ring: 350 75% 55%;
+    --sidebar-background: 350 12% 6%;
+    --sidebar-foreground: 36 25% 94%;
+    --sidebar-primary: 350 72% 48%;
+    --sidebar-primary-foreground: 36 30% 96%;
+    --sidebar-accent: 350 8% 12%;
+    --sidebar-accent-foreground: 36 25% 94%;
+    --sidebar-border: 350 8% 14%;
+    --sidebar-ring: 350 72% 48%;
 
-    --gold: 42 85% 60%;
-    --gold-foreground: 350 18% 7%;
+    --gold: 42 80% 56%;
+    --gold-foreground: 350 30% 8%;
 
-    --vinho: 350 75% 55%;
-    --vinho-foreground: 350 18% 7%;
+    --vinho: 350 72% 48%;
+    --vinho-foreground: 36 30% 96%;
 
-    --cambone: 206 92% 62%;
-    --cambone-foreground: 226 18% 12%;
+    --cambone: 206 88% 58%;
+    --cambone-foreground: 226 18% 10%;
 
-    --gradient-tusva: linear-gradient(135deg, hsl(350 70% 22%) 0%, hsl(350 75% 38%) 60%, hsl(42 85% 55%) 130%);
-    --gradient-iansa: linear-gradient(135deg, hsl(350 18% 11%) 0%, hsl(350 70% 32%) 100%);
-    --gradient-vinho: linear-gradient(135deg, hsl(350 70% 28%) 0%, hsl(350 80% 18%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(42 85% 60%) 0%, hsl(38 85% 42%) 100%);
-    --gradient-dawn: linear-gradient(180deg, hsl(350 18% 9%) 0%, hsl(350 18% 7%) 100%);
+    --gradient-tusva: linear-gradient(135deg, hsl(350 70% 18%) 0%, hsl(350 72% 32%) 55%, hsl(42 78% 50%) 130%);
+    --gradient-iansa: linear-gradient(135deg, hsl(350 12% 8%) 0%, hsl(350 72% 28%) 100%);
+    --gradient-vinho: linear-gradient(135deg, hsl(350 72% 30%) 0%, hsl(350 80% 14%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(42 82% 58%) 0%, hsl(38 82% 42%) 100%);
+    --gradient-dawn: linear-gradient(180deg, hsl(350 12% 7%) 0%, hsl(350 12% 5%) 100%);
 
-    --shadow-card: 0 2px 14px -4px hsl(0 0% 0% / 0.45), 0 1px 3px hsl(0 0% 0% / 0.25);
-    --shadow-elegant: 0 14px 40px -12px hsl(0 0% 0% / 0.6), 0 4px 12px -4px hsl(0 0% 0% / 0.3);
-    --shadow-glow-gold: 0 0 0 1px hsl(42 85% 60% / 0.4), 0 8px 28px -6px hsl(42 85% 55% / 0.55);
-    --shadow-glow-vinho: 0 0 0 1px hsl(350 75% 55% / 0.4), 0 10px 32px -6px hsl(350 75% 50% / 0.5);
+    --shadow-card: 0 2px 14px -4px hsl(0 0% 0% / 0.55), 0 1px 3px hsl(0 0% 0% / 0.35);
+    --shadow-elegant: 0 18px 44px -12px hsl(0 0% 0% / 0.7), 0 4px 12px -4px hsl(0 0% 0% / 0.4);
+    --shadow-glow-gold: 0 0 0 1px hsl(42 80% 56% / 0.35), 0 8px 28px -6px hsl(42 80% 50% / 0.4);
+    --shadow-glow-vinho: 0 0 0 1px hsl(350 72% 48% / 0.35), 0 10px 32px -6px hsl(350 72% 42% / 0.4);
   }
 }
 
