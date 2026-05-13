@@ -412,7 +412,7 @@ export default function Dashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{m.nome_espiritual || m.nome}</p>
                     </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold-foreground border border-gold/30 font-semibold">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold dark:text-accent border border-gold/40 font-semibold">
                       Dia {String(m.dia).padStart(2, "0")}
                     </span>
                   </div>

@@ -264,7 +264,7 @@ export function ErvasBanhosTab({ isAdmin }: { isAdmin: boolean }) {
                             </span>
                           )}
                           {evento && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold/15 text-gold-foreground border border-gold/30 font-semibold inline-flex items-center gap-1">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold/15 text-gold dark:text-accent border border-gold/40 font-semibold inline-flex items-center gap-1">
                               <CalendarDays className="w-3 h-3" />
                               {(evento as any).titulo}
                             </span>

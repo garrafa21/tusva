@@ -26,7 +26,7 @@ const linhaLabel: Record<string, string> = {
 };
 
 const tipoCor: Record<string, string> = {
-  gira: "bg-primary/20 text-primary", festa: "bg-accent/20 text-accent-foreground",
+  gira: "bg-primary/20 text-primary", festa: "bg-accent/20 text-accent dark:text-accent",
   reuniao: "bg-blue-500/20 text-blue-500", desenvolvimento: "bg-green-500/20 text-green-600", outro: "bg-secondary text-muted-foreground",
 };
 
