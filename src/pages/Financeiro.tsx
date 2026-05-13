@@ -137,7 +137,7 @@ export default function Financeiro() {
 
   const statusConfig: Record<string, { dot: string; text: string; label: string }> = {
     pago_validado: { dot: "bg-primary", text: "text-primary", label: "Pago validado" },
-    paguei: { dot: "bg-accent", text: "text-accent-foreground", label: "Paguei" },
+    paguei: { dot: "bg-accent", text: "text-accent", label: "Paguei" },
     vou_atrasar: { dot: "bg-destructive", text: "text-destructive", label: "Vou atrasar" },
     pendente: { dot: "bg-secondary", text: "text-muted-foreground", label: "Pendente" },
     atrasado: { dot: "bg-destructive", text: "text-destructive", label: "Atrasado" },
