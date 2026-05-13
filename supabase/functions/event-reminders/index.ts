@@ -58,14 +58,13 @@ serve(async (req) => {
     const processedEventIds: string[] = [];
 
     for (const ev of eventos) {
-      // Quem JÁ confirmou (status confirmado) — pendente/recusou ainda recebem
-      const { data: confirmados } = await supabase
+      // Quem JÁ respondeu (vai OU nao_vai) — só lembramos quem ainda não respondeu
+      const { data: respondidos } = await supabase
         .from("confirmacoes_presenca")
-        .select("user_id, status")
-        .eq("evento_id", ev.id)
-        .eq("status", "confirmado");
-      const confirmadoIds = new Set((confirmados ?? []).map((c) => c.user_id));
-      const pendingIds = allUserIds.filter((uid) => !confirmadoIds.has(uid));
+        .select("user_id")
+        .eq("evento_id", ev.id);
+      const respondedIds = new Set((respondidos ?? []).map((c) => c.user_id));
+      const pendingIds = allUserIds.filter((uid) => !respondedIds.has(uid));
       if (pendingIds.length === 0) {
         processedEventIds.push(ev.id);
         continue;
