@@ -522,7 +522,6 @@ export type Database = {
           id: string
           nome: string
           nome_espiritual: string | null
-          telefone: string | null
           updated_at: string
           user_id: string
         }
@@ -534,7 +533,6 @@ export type Database = {
           id?: string
           nome: string
           nome_espiritual?: string | null
-          telefone?: string | null
           updated_at?: string
           user_id: string
         }
@@ -546,6 +544,23 @@ export type Database = {
           id?: string
           nome?: string
           nome_espiritual?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles_private: {
+        Row: {
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
           telefone?: string | null
           updated_at?: string
           user_id?: string
