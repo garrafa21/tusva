@@ -85,3 +85,48 @@ export function linhaInfo(linha?: string | null) {
     onGradient: linhaOnGradientText[key] ?? "text-white",
   };
 }
+
+// ───── Categorias de Pontos Cantados ─────
+// Reusa o campo `linha` da tabela `pontos`, adicionando categorias de ritual.
+export const pontoCategoriaLabel: Record<string, string> = {
+  abertura: "Abertura",
+  encerramento: "Encerramento",
+  ...linhaLabel,
+};
+
+export const pontoCategoriaEmoji: Record<string, string> = {
+  abertura: "🌅",
+  encerramento: "🌙",
+  ...linhaEmoji,
+};
+
+// Ordem de exibição
+export const pontoCategoriaOrder: string[] = [
+  "abertura",
+  "encerramento",
+  "caboclos",
+  "pretos_velhos",
+  "eres",
+  "baianos",
+  "marinheiros",
+  "boiadeiros",
+  "ciganos",
+  "malandragem",
+  "esquerda",
+  "_sem",
+];
+
+export function pontoCategoriaInfo(cat?: string | null) {
+  const key = cat ?? "_sem";
+  return {
+    key,
+    label: pontoCategoriaLabel[key] ?? "Sem categoria",
+    emoji: pontoCategoriaEmoji[key] ?? "✨",
+    badge:
+      key === "abertura"
+        ? "bg-gold/15 text-gold-foreground dark:text-accent border border-gold/30"
+        : key === "encerramento"
+          ? "bg-vinho/15 text-vinho dark:text-primary border border-vinho/30"
+          : linhaBadge[key] ?? "bg-secondary text-muted-foreground border border-border",
+  };
+}

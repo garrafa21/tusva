@@ -19,20 +19,34 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Music, Plus, Trash2, Upload, X, Search } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Music, Plus, Trash2, Upload, X, Search, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { linhaInfo, linhaLabel } from "@/lib/linhaColors";
+import { pontoCategoriaInfo, pontoCategoriaLabel, pontoCategoriaOrder } from "@/lib/linhaColors";
 import { ListSkeleton } from "@/components/skeletons/LoadingSkeleton";
+
+type Ponto = {
+  id: string;
+  titulo: string;
+  letra: string;
+  linha: string | null;
+  audio_url: string | null;
+  criado_por: string | null;
+};
 
 export default function Pontos() {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
-  const [linha, setLinha] = useState<string>("none");
+  const [editing, setEditing] = useState<Ponto | null>(null);
+  const [categoria, setCategoria] = useState<string>("abertura");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,7 +59,7 @@ export default function Pontos() {
         .select("*")
         .order("titulo", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Ponto[];
     },
     enabled: !!user,
   });
@@ -66,7 +80,7 @@ export default function Pontos() {
 
   const resetForm = () => {
     setEditing(null);
-    setLinha("none");
+    setCategoria("abertura");
     setAudioFile(null);
   };
 
@@ -75,9 +89,9 @@ export default function Pontos() {
     setOpen(true);
   };
 
-  const openEdit = (p: any) => {
+  const openEdit = (p: Ponto) => {
     setEditing(p);
-    setLinha(p.linha ?? "none");
+    setCategoria(p.linha ?? "abertura");
     setAudioFile(null);
     setOpen(true);
   };
@@ -98,22 +112,23 @@ export default function Pontos() {
         setUploading(false);
       }
 
-      const payload: any = {
+      const basePayload = {
         titulo: (form.get("titulo") as string).trim(),
         letra: (form.get("letra") as string).trim(),
-        linha: linha !== "none" ? linha : null,
+        linha: categoria,
+        ...(audio_url !== undefined ? { audio_url } : {}),
       };
-      if (audio_url !== undefined) payload.audio_url = audio_url;
 
       if (editing) {
         const { error } = await supabase
           .from("pontos")
-          .update(payload)
+          .update(basePayload)
           .eq("id", editing.id);
         if (error) throw error;
       } else {
-        payload.criado_por = user!.id;
-        const { error } = await supabase.from("pontos").insert(payload);
+        const { error } = await supabase
+          .from("pontos")
+          .insert({ ...basePayload, criado_por: user!.id });
         if (error) throw error;
       }
     },
@@ -134,8 +149,7 @@ export default function Pontos() {
   });
 
   const remove = useMutation({
-    mutationFn: async (p: any) => {
-      // tenta apagar áudio do storage
+    mutationFn: async (p: Ponto) => {
       if (p.audio_url) {
         try {
           const url = new URL(p.audio_url);
@@ -157,17 +171,31 @@ export default function Pontos() {
     },
   });
 
-  const filtered = useMemo(() => {
-    if (!pontos) return [];
+  // Agrupa pontos por categoria respeitando filtro de busca
+  const grouped = useMemo(() => {
+    const list = pontos ?? [];
     const s = search.trim().toLowerCase();
-    if (!s) return pontos;
-    return pontos.filter(
-      (p: any) =>
-        p.titulo.toLowerCase().includes(s) ||
-        p.letra.toLowerCase().includes(s) ||
-        (p.linha && linhaLabel[p.linha]?.toLowerCase().includes(s)),
-    );
+    const filtered = s
+      ? list.filter(
+          (p) =>
+            p.titulo.toLowerCase().includes(s) ||
+            p.letra.toLowerCase().includes(s) ||
+            (p.linha && pontoCategoriaLabel[p.linha]?.toLowerCase().includes(s)),
+        )
+      : list;
+
+    const map = new Map<string, Ponto[]>();
+    for (const p of filtered) {
+      const key = p.linha && pontoCategoriaLabel[p.linha] ? p.linha : "_sem";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    }
+    return pontoCategoriaOrder
+      .filter((k) => map.has(k))
+      .map((k) => ({ key: k, info: pontoCategoriaInfo(k), itens: map.get(k)! }));
   }, [pontos, search]);
+
+  const totalFiltered = grouped.reduce((acc, g) => acc + g.itens.length, 0);
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4 animate-fade-in-up">
@@ -181,7 +209,7 @@ export default function Pontos() {
               Pontos Cantados
             </h1>
             <p className="text-[11px] text-muted-foreground">
-              Letras e áudios dos pontos da casa
+              Toque uma categoria para ver os pontos
             </p>
           </div>
         </div>
@@ -195,7 +223,7 @@ export default function Pontos() {
       <div className="relative">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar ponto, letra ou linha..."
+          placeholder="Buscar ponto, letra ou categoria..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -204,7 +232,7 @@ export default function Pontos() {
 
       {isLoading ? (
         <ListSkeleton />
-      ) : filtered.length === 0 ? (
+      ) : totalFiltered === 0 ? (
         <Card className="bg-card border-border shadow-card gold-hairline">
           <CardContent className="p-8 text-center">
             <Music className="w-8 h-8 mx-auto text-muted-foreground/40 mb-2" />
@@ -214,67 +242,100 @@ export default function Pontos() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((p: any) => {
-            const cfg = linhaInfo(p.linha);
-            return (
-              <Card
-                key={p.id}
-                className="bg-card border-border shadow-card gold-hairline overflow-hidden"
-              >
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start gap-2">
-                    <span className="text-2xl">{cfg.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-semibold leading-tight">
-                        {p.titulo}
-                      </h3>
-                      {p.linha && (
-                        <span
-                          className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}
-                        >
-                          {cfg.label}
-                        </span>
-                      )}
-                    </div>
-                    {isAdmin && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => openEdit(p)}
-                          className="text-[11px] text-muted-foreground hover:text-primary px-2 py-1 rounded-md hover:bg-secondary"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Excluir "${p.titulo}"?`)) remove.mutate(p);
-                          }}
-                          className="text-muted-foreground hover:text-destructive p-1.5 rounded-md hover:bg-secondary"
-                          aria-label="Excluir"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+        <Accordion
+          type="multiple"
+          defaultValue={search ? grouped.map((g) => g.key) : []}
+          className="space-y-2"
+        >
+          {grouped.map((g) => (
+            <AccordionItem
+              key={g.key}
+              value={g.key}
+              className="border border-border rounded-xl bg-card shadow-card gold-hairline overflow-hidden"
+            >
+              <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="text-xl">{g.info.emoji}</span>
+                  <span className="font-display font-semibold text-left flex-1">
+                    {g.info.label}
+                  </span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${g.info.badge}`}
+                  >
+                    {g.itens.length}
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-2 pb-2">
+                <Accordion
+                  type="multiple"
+                  defaultValue={search ? g.itens.map((p) => p.id) : []}
+                  className="space-y-1"
+                >
+                  {g.itens.map((p) => (
+                    <AccordionItem
+                      key={p.id}
+                      value={p.id}
+                      className="border-0 rounded-lg bg-secondary/40 overflow-hidden"
+                    >
+                      <div className="flex items-center pr-2">
+                        <AccordionTrigger className="flex-1 px-3 py-2.5 hover:no-underline [&>svg]:hidden">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground transition-transform [[data-state=open]_&]:rotate-180" />
+                            <span className="text-sm font-medium truncate text-left">
+                              {p.titulo}
+                            </span>
+                            {p.audio_url && (
+                              <span className="text-[10px] text-muted-foreground shrink-0">
+                                🎵
+                              </span>
+                            )}
+                          </div>
+                        </AccordionTrigger>
+                        {isAdmin && (
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEdit(p);
+                              }}
+                              className="text-[11px] text-muted-foreground hover:text-primary px-2 py-1 rounded-md hover:bg-secondary"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`Excluir "${p.titulo}"?`)) remove.mutate(p);
+                              }}
+                              className="text-muted-foreground hover:text-destructive p-1.5 rounded-md hover:bg-secondary"
+                              aria-label="Excluir"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground/90">
-                    {p.letra}
-                  </pre>
-
-                  {p.audio_url && (
-                    <audio
-                      controls
-                      preload="none"
-                      src={p.audio_url}
-                      className="w-full"
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                      <AccordionContent className="px-3 pb-3 pt-1 space-y-2">
+                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground/90">
+                          {p.letra}
+                        </pre>
+                        {p.audio_url && (
+                          <audio
+                            controls
+                            preload="none"
+                            src={p.audio_url}
+                            className="w-full"
+                          />
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       )}
 
       {/* Dialog cadastrar/editar */}
@@ -303,23 +364,24 @@ export default function Pontos() {
                 name="titulo"
                 required
                 defaultValue={editing?.titulo ?? ""}
-                placeholder="Ex: Ponto de Iansã"
+                placeholder="Ex: Hino da Umbanda"
               />
             </div>
 
             <div>
-              <Label>Linha (opcional)</Label>
-              <Select value={linha} onValueChange={setLinha}>
+              <Label>Categoria *</Label>
+              <Select value={categoria} onValueChange={setCategoria}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a linha" />
+                  <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sem linha específica</SelectItem>
-                  {Object.entries(linhaLabel).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
-                  ))}
+                  {pontoCategoriaOrder
+                    .filter((k) => k !== "_sem")
+                    .map((k) => (
+                      <SelectItem key={k} value={k}>
+                        {pontoCategoriaLabel[k]}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

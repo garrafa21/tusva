@@ -20,7 +20,7 @@ const Escalas = lazy(() => import("./pages/Escalas"));
 const Avisos = lazy(() => import("./pages/Avisos"));
 const Estudos = lazy(() => import("./pages/Estudos"));
 const Reposicao = lazy(() => import("./pages/Reposicao"));
-const Financeiro = lazy(() => import("./pages/Financeiro"));
+
 const Firmezas = lazy(() => import("./pages/Firmezas"));
 const Pontos = lazy(() => import("./pages/Pontos"));
 const Perfil = lazy(() => import("./pages/Perfil"));
@@ -58,7 +58,7 @@ const AppRoutes = () => (
         <Route path="/avisos" element={<ProtectedRoute><AppLayout><Avisos /></AppLayout></ProtectedRoute>} />
         <Route path="/estudos" element={<ProtectedRoute><AppLayout><Estudos /></AppLayout></ProtectedRoute>} />
         <Route path="/reposicao" element={<ProtectedRoute><AppLayout><Reposicao /></AppLayout></ProtectedRoute>} />
-        <Route path="/financeiro" element={<ProtectedRoute><AppLayout><Financeiro /></AppLayout></ProtectedRoute>} />
+        
         <Route path="/firmezas" element={<ProtectedRoute><AppLayout><Firmezas /></AppLayout></ProtectedRoute>} />
         <Route path="/pontos" element={<ProtectedRoute><AppLayout><Pontos /></AppLayout></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><AppLayout><Perfil /></AppLayout></ProtectedRoute>} />
