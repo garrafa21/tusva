@@ -20,7 +20,7 @@ const Escalas = lazy(() => import("./pages/Escalas"));
 const Avisos = lazy(() => import("./pages/Avisos"));
 const Estudos = lazy(() => import("./pages/Estudos"));
 const Reposicao = lazy(() => import("./pages/Reposicao"));
-const Financeiro = lazy(() => import("./pages/Financeiro"));
+
 const Firmezas = lazy(() => import("./pages/Firmezas"));
 const Pontos = lazy(() => import("./pages/Pontos"));
 const Perfil = lazy(() => import("./pages/Perfil"));
