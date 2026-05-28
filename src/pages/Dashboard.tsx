@@ -18,6 +18,7 @@ import {
   Cake,
   Sparkles,
   Leaf,
+  Music,
 } from "lucide-react";
 import { format, differenceInSeconds } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -363,6 +364,7 @@ export default function Dashboard() {
           { to: "/financeiro", icon: DollarSign, label: "Financeiro", count: 0, color: "text-gold" },
           { to: "/estudos", icon: BookOpen, label: "Estudos", count: 0, color: "text-primary" },
           { to: "/reposicao", icon: Package, label: "Reposição", count: 0, color: "text-gold" },
+          { to: "/pontos", icon: Music, label: "Pontos", count: 0, color: "text-primary" },
         ].map((s, i) => (
           <Link
             key={s.to}
