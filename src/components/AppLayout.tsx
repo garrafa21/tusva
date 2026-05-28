@@ -27,7 +27,6 @@ const navItems = [
 ];
 
 const moreItems = [
-  { to: "/financeiro", icon: DollarSign, label: "Financeiro" },
   { to: "/escalas", icon: ClipboardList, label: "Escalas" },
 ];
 
