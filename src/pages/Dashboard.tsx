@@ -361,7 +361,7 @@ export default function Dashboard() {
           { to: "/avisos", icon: Bell, label: "Avisos", count: totalAvisosDashboard, color: "text-gold" },
           { to: "/firmezas", icon: HandHeart, label: "Firmezas", count: firmezasAtivas?.length ?? 0, color: "text-primary" },
           { to: "/escalas", icon: ClipboardList, label: "Escalas", count: 0, color: "text-primary" },
-          { to: "/financeiro", icon: DollarSign, label: "Financeiro", count: 0, color: "text-gold" },
+          
           { to: "/estudos", icon: BookOpen, label: "Estudos", count: 0, color: "text-primary" },
           { to: "/reposicao", icon: Package, label: "Reposição", count: 0, color: "text-gold" },
           { to: "/pontos", icon: Music, label: "Pontos", count: 0, color: "text-primary" },
