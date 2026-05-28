@@ -11,7 +11,7 @@ import {
   Settings,
   Moon,
   Sun,
-  DollarSign,
+  
   HandHeart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
