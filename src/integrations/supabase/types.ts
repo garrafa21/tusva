@@ -424,6 +424,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pontos: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          criado_por: string | null
+          id: string
+          letra: string
+          linha: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          letra: string
+          linha?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          letra?: string
+          linha?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       prayer_requests: {
         Row: {
           created_at: string
