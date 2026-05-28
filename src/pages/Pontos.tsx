@@ -112,22 +112,23 @@ export default function Pontos() {
         setUploading(false);
       }
 
-      const payload: Record<string, unknown> = {
+      const basePayload = {
         titulo: (form.get("titulo") as string).trim(),
         letra: (form.get("letra") as string).trim(),
         linha: categoria,
+        ...(audio_url !== undefined ? { audio_url } : {}),
       };
-      if (audio_url !== undefined) payload.audio_url = audio_url;
 
       if (editing) {
         const { error } = await supabase
           .from("pontos")
-          .update(payload)
+          .update(basePayload)
           .eq("id", editing.id);
         if (error) throw error;
       } else {
-        payload.criado_por = user!.id;
-        const { error } = await supabase.from("pontos").insert(payload as never);
+        const { error } = await supabase
+          .from("pontos")
+          .insert({ ...basePayload, criado_por: user!.id });
         if (error) throw error;
       }
     },
