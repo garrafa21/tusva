@@ -18,7 +18,7 @@ import {
   Cake,
   Sparkles,
   Leaf,
-} from "lucide-react";
+  Music,
 import { format, differenceInSeconds } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
