@@ -10,7 +10,7 @@ import {
   BookOpen,
   AlertTriangle,
   Star,
-  DollarSign,
+  
   Users,
   Shield,
   Package,
