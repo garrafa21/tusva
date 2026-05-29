@@ -240,7 +240,9 @@ export function ErvasBanhosTab({ isAdmin }: { isAdmin: boolean }) {
                 return (
                   <Card key={e.id} className="bg-card border-border shadow-card hover-lift gold-hairline overflow-hidden">
                     {e.imagem_url && (
-                      <img src={e.imagem_url} alt={e.titulo} className="w-full h-40 object-cover" loading="lazy" />
+                      <button type="button" onClick={() => setLightbox(e.imagem_url)} className="block w-full">
+                        <img src={e.imagem_url} alt={e.titulo} className="w-full max-h-64 object-cover hover:opacity-90 transition cursor-zoom-in" loading="lazy" />
+                      </button>
                     )}
                     <CardContent className="p-4 flex gap-3">
                       <div className={`w-10 h-10 rounded-full ${cfg.gradient} flex items-center justify-center text-lg shrink-0 shadow-card`}>
