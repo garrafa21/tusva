@@ -160,7 +160,7 @@ export default function Calendario() {
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
-  const showLinhaSelector = selectedTipo === "gira" || selectedTipo === "desenvolvimento";
+  const showLinhaSelector = selectedTipo === "gira" || selectedTipo === "desenvolvimento" || selectedTipo === "festa";
   const now = new Date();
   const futuros = eventos?.filter((e) => new Date(e.data_inicio) >= now) ?? [];
   const passados = eventos?.filter((e) => new Date(e.data_inicio) < now) ?? [];
