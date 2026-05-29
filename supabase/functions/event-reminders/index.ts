@@ -102,8 +102,9 @@ serve(async (req) => {
               payload
             );
             return true;
-          } catch (err: any) {
-            if (err?.statusCode === 404 || err?.statusCode === 410) invalid.push(sub.endpoint);
+          } catch (err: unknown) {
+            const statusCode = typeof err === "object" && err !== null && "statusCode" in err ? err.statusCode : undefined;
+            if (statusCode === 404 || statusCode === 410) invalid.push(sub.endpoint);
             return false;
           }
         })
