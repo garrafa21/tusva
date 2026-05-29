@@ -178,14 +178,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .channel(`user-notifications-${userId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "avisos" },
-        (payload) => {
-          const aviso = payload.new as { titulo?: string; conteudo?: string };
-          void showSystemNotification(aviso.titulo ?? "Novo aviso", aviso.conteudo ?? "Você recebeu um novo aviso.");
-        }
-      )
-      .on(
-        "postgres_changes",
         { event: "INSERT", schema: "public", table: "eventos" },
         (payload) => {
           const evento = payload.new as { titulo?: string; tipo?: string; linha?: string; data_inicio?: string };
