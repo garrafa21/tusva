@@ -73,7 +73,7 @@
     --gradient-baianos: linear-gradient(135deg, hsl(50 95% 55%), hsl(40 25% 18%));
     --gradient-marinheiros: linear-gradient(135deg, hsl(195 75% 70%), hsl(0 0% 100%));
     --gradient-boiadeiros: linear-gradient(135deg, hsl(28 55% 38%), hsl(20 45% 25%));
-    --gradient-ciganos: linear-gradient(135deg, hsl(20 90% 55%), hsl(330 70% 55%), hsl(50 85% 55%));
+    --gradient-ciganos: linear-gradient(135deg, hsl(42 86% 53%) 0%, hsl(33 96% 45%) 18%, hsl(22 94% 40%) 34%, hsl(7 98% 35%) 50%, hsl(285 54% 34%) 66%, hsl(220 52% 33%) 82%, hsl(193 37% 45%) 100%);
     --gradient-malandros: linear-gradient(135deg, hsl(355 75% 45%), hsl(0 0% 100%));
     --gradient-esquerda: linear-gradient(135deg, hsl(0 0% 10%), hsl(355 80% 38%));
 
@@ -157,6 +157,7 @@
   .dark .bg-sky-500\/15 { background-color: hsl(195 80% 62% / 0.2); }
   .dark .bg-amber-700\/15 { background-color: hsl(28 65% 50% / 0.22); }
   .dark .bg-orange-500\/15 { background-color: hsl(20 90% 58% / 0.2); }
+  .dark .bg-cyan-600\/15 { background-color: hsl(193 50% 50% / 0.24); }
   .dark .bg-red-500\/15 { background-color: hsl(355 80% 58% / 0.2); }
   .dark .bg-red-900\/15 { background-color: hsl(355 70% 42% / 0.25); }
   .dark .bg-zinc-500\/15 { background-color: hsl(0 0% 75% / 0.18); }
@@ -172,6 +173,9 @@
   /* Dark — Baianos: o texto preto fica preservado sobre amarelo */
   .dark .bg-linha-baianos {
     background: linear-gradient(135deg, hsl(50 92% 58%), hsl(40 30% 22%));
+  }
+  .dark .bg-linha-ciganos {
+    background: linear-gradient(135deg, hsl(42 88% 56%) 0%, hsl(33 96% 48%) 18%, hsl(22 94% 42%) 34%, hsl(7 92% 38%) 50%, hsl(285 58% 38%) 66%, hsl(220 58% 36%) 82%, hsl(193 42% 48%) 100%);
   }
 }
 
