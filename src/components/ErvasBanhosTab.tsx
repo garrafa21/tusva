@@ -284,6 +284,13 @@ export function ErvasBanhosTab({ isAdmin }: { isAdmin: boolean }) {
           );
         })
       )}
+
+      <Dialog open={!!lightbox} onOpenChange={(v) => !v && setLightbox(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 bg-background border-border overflow-auto">
+          <DialogHeader className="sr-only"><DialogTitle>Imagem</DialogTitle></DialogHeader>
+          {lightbox && <img src={lightbox} alt="" className="w-full h-auto object-contain max-h-[90vh] mx-auto" />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
