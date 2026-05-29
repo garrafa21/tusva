@@ -295,8 +295,8 @@ export default function Dashboard() {
       ) : proximoEvento ? (
         <Link to="/calendario" className="block group">
           <Card className="overflow-hidden border-0 shadow-elegant hover-lift relative">
-            {/* Background gradient da linha */}
-            <div className={`absolute inset-0 ${linhaCfg.gradient} opacity-95`} />
+            {/* Background gradient da linha (ou colorido p/ festas sem linha) */}
+            <div className={`absolute inset-0 ${linha ? linhaCfg.gradient : (proximoEvento.tipo === "festa" ? "bg-linha-festa" : linhaCfg.gradient)} opacity-95`} />
             <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-white/10" />
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gold/30 blur-3xl" />
 
