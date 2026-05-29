@@ -57,7 +57,7 @@ export const linhaBadge: Record<string, string> = {
   baianos: "bg-yellow-500/15 text-yellow-800 dark:text-yellow-300 border border-yellow-500/30",
   marinheiros: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/30",
   boiadeiros: "bg-amber-700/15 text-amber-800 dark:text-amber-300 border border-amber-700/30",
-  ciganos: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-500/30",
+  ciganos: "bg-cyan-600/15 text-cyan-900 dark:text-cyan-200 border border-cyan-600/30",
   malandragem: "bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/30",
   esquerda: "bg-red-900/15 text-red-900 dark:text-red-300 border border-red-900/30",
 };

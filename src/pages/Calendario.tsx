@@ -14,6 +14,11 @@ import { Calendar, Plus, Clock, Trash2, CheckCircle2, XCircle, Users } from "luc
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { sendPushNotification } from "@/lib/pushNotifications";
+import { linhaInfo } from "@/lib/linhaColors";
+import type { Database } from "@/integrations/supabase/types";
+
+type EventoRow = Database["public"]["Tables"]["eventos"]["Row"];
+type TipoEvento = Database["public"]["Enums"]["tipo_evento"];
 
 const tipoLabel: Record<string, string> = {
   gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", outro: "Outro",
@@ -30,16 +35,23 @@ const tipoCor: Record<string, string> = {
   reuniao: "bg-blue-500/20 text-blue-500", desenvolvimento: "bg-green-500/20 text-green-600", outro: "bg-secondary text-muted-foreground",
 };
 
-const linhaCor: Record<string, string> = {
-  caboclos: "bg-emerald-500/20 text-emerald-700", pretos_velhos: "bg-amber-500/20 text-amber-700",
-  eres: "bg-pink-500/20 text-pink-600", baianos: "bg-orange-500/20 text-orange-600",
-  marinheiros: "bg-cyan-500/20 text-cyan-700", boiadeiros: "bg-yellow-500/20 text-yellow-700",
-  ciganos: "bg-purple-500/20 text-purple-600", malandragem: "bg-slate-500/20 text-slate-600",
-  esquerda: "bg-red-500/20 text-red-600",
-};
-
 // Brazil (São Paulo) is always UTC-3 (no DST since 2019)
 const SAO_PAULO_OFFSET = "-03:00";
+
+function getEventNotificationTitle(titulo: string, tipo: string, linha?: string | null) {
+  if ((tipo === "gira" || tipo === "desenvolvimento") && linha) {
+    return `GIRA DE ${linhaInfo(linha).label.toUpperCase()}`;
+  }
+
+  return titulo.trim() || "Novo evento";
+}
+
+function formatEventDateTime(dateIso: string) {
+  const date = new Date(dateIso);
+  const data = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+  const hora = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+  return `${data} às ${hora}`;
+}
 
 export default function Calendario() {
   const { isAdmin, canManageEscalas, user } = useAuth();
@@ -92,31 +104,29 @@ export default function Calendario() {
       const { error } = await supabase.from("eventos").insert({
         titulo,
         descricao,
-        tipo: selectedTipo as any,
+        tipo: selectedTipo as TipoEvento,
         linha: selectedLinha || null,
         data_inicio: dataInicio,
         criado_por: user?.id,
       });
       if (error) throw error;
 
-      if (selectedTipo === "gira" || selectedTipo === "desenvolvimento") {
-        const linhaNotif = (linhaLabel[selectedLinha] ?? selectedLinha ?? "Linha espiritual")
-          .replace(/^[^\p{L}\p{N}]+/u, "")
-          .toUpperCase();
-        void sendPushNotification({
-          title: `GIRA DE ${linhaNotif}`,
-          body: "CONFIRME SUA PRESENÇA!",
-          url: "/calendario",
-        });
-      }
+      return sendPushNotification({
+        title: getEventNotificationTitle(titulo, selectedTipo, selectedLinha || null),
+        body: `CONFIRME SUA PRESENÇA! ${formatEventDateTime(dataInicio)}`,
+        url: "/calendario",
+      });
     },
-    onSuccess: () => {
+    onSuccess: (pushDelivered) => {
       queryClient.invalidateQueries({ queryKey: ["eventos"] });
       queryClient.invalidateQueries({ queryKey: ["proximo-evento"] });
       setOpen(false);
       setSelectedTipo("gira");
       setSelectedLinha("");
-      toast({ title: "Evento criado!" });
+      toast({
+        title: "Evento criado!",
+        description: pushDelivered ? "Notificação enviada para todos." : "Evento criado, mas não consegui confirmar o envio da notificação.",
+      });
     },
     onError: (e) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
@@ -168,8 +178,8 @@ export default function Calendario() {
     return m?.nome_espiritual || m?.nome || "?";
   };
 
-  const renderEvento = (e: any, isPast = false) => {
-    const linha = (e as any).linha as string | null;
+  const renderEvento = (e: EventoRow, isPast = false) => {
+    const linha = e.linha;
     const isGira = e.tipo === "gira" || e.tipo === "desenvolvimento";
     const myConf = getMyConfirmacao(e.id);
     const confs = getConfirmacoesByEvento(e.id);
@@ -185,11 +195,14 @@ export default function Calendario() {
                 <span className={`text-xs px-2 py-0.5 rounded-full ${tipoCor[e.tipo] ?? tipoCor.outro}`}>
                   {tipoLabel[e.tipo] ?? e.tipo}
                 </span>
-                {linha && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${linhaCor[linha] ?? "bg-secondary text-muted-foreground"}`}>
-                    {linhaLabel[linha] ?? linha}
-                  </span>
-                )}
+                {linha && (() => {
+                  const linhaCfg = linhaInfo(linha);
+                  return (
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${linhaCfg.badge}`}>
+                      {linhaCfg.emoji} {linhaCfg.label}
+                    </span>
+                  );
+                })()}
               </div>
               <h3 className="font-display font-semibold mt-1">{e.titulo}</h3>
               {e.descricao && <p className="text-sm text-muted-foreground mt-1">{e.descricao}</p>}

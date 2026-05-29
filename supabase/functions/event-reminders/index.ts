@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const REMINDER_INTERVAL_HOURS = 3;
+const REMINDER_INTERVAL_HOURS = 5;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,7 +21,7 @@ serve(async (req) => {
     const now = new Date();
     const cutoff = new Date(now.getTime() - REMINDER_INTERVAL_HOURS * 60 * 60 * 1000).toISOString();
 
-    // Eventos futuros, criados há >=3h, e que não receberam lembrete nos últimos 3h
+    // Eventos futuros, criados há >=5h, e que não receberam lembrete nos últimos 5h
     const { data: eventos, error: eventosError } = await supabase
       .from("eventos")
       .select("id, titulo, data_inicio, created_at, last_reminder_sent_at")
@@ -88,7 +88,7 @@ serve(async (req) => {
       });
 
       const payload = JSON.stringify({
-        title: "Confirme sua presença 🙏",
+        title: ev.titulo || "Confirme sua presença 🙏",
         body: `${ev.titulo} — ${dataFmt} às ${horaFmt}. Toque para confirmar.`,
         url: "/calendario",
       });
@@ -102,8 +102,9 @@ serve(async (req) => {
               payload
             );
             return true;
-          } catch (err: any) {
-            if (err?.statusCode === 404 || err?.statusCode === 410) invalid.push(sub.endpoint);
+          } catch (err: unknown) {
+            const statusCode = typeof err === "object" && err !== null && "statusCode" in err ? err.statusCode : undefined;
+            if (statusCode === 404 || statusCode === 410) invalid.push(sub.endpoint);
             return false;
           }
         })
