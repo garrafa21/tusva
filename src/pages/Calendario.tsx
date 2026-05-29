@@ -15,6 +15,10 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { linhaInfo } from "@/lib/linhaColors";
+import type { Database } from "@/integrations/supabase/types";
+
+type EventoRow = Database["public"]["Tables"]["eventos"]["Row"];
+type TipoEvento = Database["public"]["Enums"]["tipo_evento"];
 
 const tipoLabel: Record<string, string> = {
   gira: "Gira", festa: "Festa", reuniao: "Reunião", desenvolvimento: "Desenvolvimento", outro: "Outro",
@@ -100,7 +104,7 @@ export default function Calendario() {
       const { error } = await supabase.from("eventos").insert({
         titulo,
         descricao,
-        tipo: selectedTipo as any,
+        tipo: selectedTipo as TipoEvento,
         linha: selectedLinha || null,
         data_inicio: dataInicio,
         criado_por: user?.id,
@@ -174,8 +178,8 @@ export default function Calendario() {
     return m?.nome_espiritual || m?.nome || "?";
   };
 
-  const renderEvento = (e: any, isPast = false) => {
-    const linha = (e as any).linha as string | null;
+  const renderEvento = (e: EventoRow, isPast = false) => {
+    const linha = e.linha;
     const isGira = e.tipo === "gira" || e.tipo === "desenvolvimento";
     const myConf = getMyConfirmacao(e.id);
     const confs = getConfirmacoesByEvento(e.id);
