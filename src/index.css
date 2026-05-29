@@ -76,6 +76,7 @@
     --gradient-ciganos: linear-gradient(135deg, hsl(42 86% 53%) 0%, hsl(33 96% 45%) 18%, hsl(22 94% 40%) 34%, hsl(7 98% 35%) 50%, hsl(285 54% 34%) 66%, hsl(220 52% 33%) 82%, hsl(193 37% 45%) 100%);
     --gradient-malandros: linear-gradient(135deg, hsl(355 75% 45%), hsl(0 0% 100%));
     --gradient-esquerda: linear-gradient(135deg, hsl(0 0% 10%), hsl(355 80% 38%));
+    --gradient-festa: linear-gradient(135deg, hsl(42 86% 53%) 0%, hsl(33 96% 45%) 16%, hsl(22 94% 40%) 32%, hsl(7 98% 35%) 48%, hsl(285 54% 34%) 66%, hsl(220 52% 33%) 84%, hsl(193 37% 45%) 100%);
 
     /* === Sombras === */
     --shadow-card: 0 2px 14px -4px hsl(350 30% 20% / 0.08), 0 1px 3px hsl(350 30% 20% / 0.06);
