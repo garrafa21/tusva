@@ -226,6 +226,7 @@
   .bg-linha-ciganos { background: var(--gradient-ciganos); }
   .bg-linha-malandros { background: var(--gradient-malandros); }
   .bg-linha-esquerda { background: var(--gradient-esquerda); }
+  .bg-linha-festa { background: var(--gradient-festa); }
 
   .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
