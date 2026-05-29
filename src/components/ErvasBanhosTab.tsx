@@ -21,6 +21,7 @@ export function ErvasBanhosTab({ isAdmin }: { isAdmin: boolean }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const [linha, setLinha] = useState<string>("");
   const [eventoId, setEventoId] = useState<string>("none");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -239,7 +240,9 @@ export function ErvasBanhosTab({ isAdmin }: { isAdmin: boolean }) {
                 return (
                   <Card key={e.id} className="bg-card border-border shadow-card hover-lift gold-hairline overflow-hidden">
                     {e.imagem_url && (
-                      <img src={e.imagem_url} alt={e.titulo} className="w-full h-40 object-cover" loading="lazy" />
+                      <button type="button" onClick={() => setLightbox(e.imagem_url)} className="block w-full">
+                        <img src={e.imagem_url} alt={e.titulo} className="w-full max-h-64 object-cover hover:opacity-90 transition cursor-zoom-in" loading="lazy" />
+                      </button>
                     )}
                     <CardContent className="p-4 flex gap-3">
                       <div className={`w-10 h-10 rounded-full ${cfg.gradient} flex items-center justify-center text-lg shrink-0 shadow-card`}>
@@ -281,6 +284,13 @@ export function ErvasBanhosTab({ isAdmin }: { isAdmin: boolean }) {
           );
         })
       )}
+
+      <Dialog open={!!lightbox} onOpenChange={(v) => !v && setLightbox(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 bg-background border-border overflow-auto">
+          <DialogHeader className="sr-only"><DialogTitle>Imagem</DialogTitle></DialogHeader>
+          {lightbox && <img src={lightbox} alt="" className="w-full h-auto object-contain max-h-[90vh] mx-auto" />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
