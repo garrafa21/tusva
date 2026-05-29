@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { syncPushSubscriptionIfNeeded } from "@/lib/pushNotifications";
+import { linhaInfo } from "@/lib/linhaColors";
 
 type AuthContextType = {
   session: Session | null;
@@ -39,20 +40,6 @@ const limpezaLabel: Record<string, string> = {
   escada: "Escada",
   lixos: "Lixos",
 };
-
-const linhaEspiritualLabel: Record<string, string> = {
-  caboclos: "Caboclos",
-  pretos_velhos: "Pretos Velhos",
-  eres: "Erês",
-  baianos: "Baianos",
-  marinheiros: "Marinheiros",
-  boiadeiros: "Boiadeiros",
-  ciganos: "Ciganos",
-  malandragem: "Malandragem",
-  esquerda: "Esquerda",
-};
-
-const linhasEspirituais = new Set(Object.keys(linhaEspiritualLabel));
 
 async function showSystemNotification(title: string, body: string) {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
@@ -201,17 +188,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "eventos" },
         (payload) => {
-          const evento = payload.new as { titulo?: string; tipo?: string; linha?: string };
-          const linhaKey = evento.linha ?? (evento.tipo && linhasEspirituais.has(evento.tipo) ? evento.tipo : undefined);
-          const linha = linhaKey ? (linhaEspiritualLabel[linhaKey] ?? linhaKey) : evento.titulo ?? "Linha";
-          const isGira = evento.tipo === "gira" || evento.tipo === "desenvolvimento" || !!linhaKey;
+          const evento = payload.new as { titulo?: string; tipo?: string; linha?: string; data_inicio?: string };
+          const isGira = evento.tipo === "gira" || evento.tipo === "desenvolvimento";
 
           if (isGira) {
+            const linha = evento.linha ? linhaInfo(evento.linha).label : evento.titulo ?? "Linha";
             void showSystemNotification(`GIRA DE ${String(linha).toUpperCase()}`, "CONFIRME SUA PRESENÇA!");
             return;
           }
 
-          void showSystemNotification("Novo evento cadastrado", evento.titulo ?? "Confira o calendário");
+          void showSystemNotification(evento.titulo ?? "Novo evento", "CONFIRME SUA PRESENÇA!");
         }
       )
       .on(
