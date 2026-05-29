@@ -21,6 +21,7 @@ export function ErvasBanhosTab({ isAdmin }: { isAdmin: boolean }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const [linha, setLinha] = useState<string>("");
   const [eventoId, setEventoId] = useState<string>("none");
   const [imageFile, setImageFile] = useState<File | null>(null);
