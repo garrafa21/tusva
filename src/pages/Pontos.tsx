@@ -57,7 +57,7 @@ export default function Pontos() {
       const { data, error } = await supabase
         .from("pontos")
         .select("*")
-        .order("titulo", { ascending: true });
+        .order("created_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Ponto[];
     },
