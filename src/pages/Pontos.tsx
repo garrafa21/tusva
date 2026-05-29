@@ -285,11 +285,6 @@ export default function Pontos() {
                             <span className="text-sm font-medium truncate text-left">
                               {p.titulo}
                             </span>
-                            {p.audio_url && (
-                              <span className="text-[10px] text-muted-foreground shrink-0">
-                                🎵
-                              </span>
-                            )}
                           </div>
                         </AccordionTrigger>
                         {isAdmin && (
